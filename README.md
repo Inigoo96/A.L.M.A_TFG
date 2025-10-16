@@ -47,7 +47,7 @@ ALMA_TFG/
 └── README.md       # Este archivo
 
 👥 Equipo:
-@InigoalDev - Andrés Laya, Íñigo Alexandre
+@Inigoo96 - Andrés Laya, Íñigo Alexandre
 @inigoSValero - Andrés Laya, Íñigo Alexandre
 @laura13usero - Laura Usero Fuentes
 @lufresno - Lucía Navarro Fresno
