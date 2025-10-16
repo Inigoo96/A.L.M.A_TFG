@@ -47,10 +47,10 @@ ALMA_TFG/
 └── README.md       # Este archivo
 
 👥 Equipo:
-@Inigoo96 - Andrés Laya, Íñigo Alexandre
-@inigoSValero - Andrés Laya, Íñigo Alexandre
-@laura13usero - Laura Usero Fuentes
-@lufresno - Lucía Navarro Fresno
+Íñigo Andrés Laya (@Inigoo96)
+Íñigo Andrés Laya (@inigoSValero)
+Laura Usero Fuentes (@laura13usero)
+Lucía Navarro Fresno (@lufresno)
 
 
 🎯 Objetivo del Proyecto
