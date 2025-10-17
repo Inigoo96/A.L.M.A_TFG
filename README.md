@@ -67,8 +67,7 @@ ALMA_TFG/
 
 - Íñigo Andrés Laya — [@Inigoo96](https://github.com/Inigoo96)  
 - Íñigo Andrés Laya — [@inigoSValero](https://github.com/inigoSValero)  
-- Laura Usero Fuentes — [@laura13usero](https://github.com/laura13usero)  
-- Lucía Navarro Fresno — [@lufresno](https://github.com/lufresno)
+- Laura Usero Fuentes — [@laura13usero](https://github.com/laura13usero)
 
 ---
 
