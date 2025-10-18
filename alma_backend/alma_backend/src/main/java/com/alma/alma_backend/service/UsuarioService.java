@@ -18,6 +18,8 @@ public interface UsuarioService {
 
     Optional<Usuario> findByEmail(String email);
 
+    boolean existsByEmail(String email);
+
     List<Usuario> findAll();
 
     List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);

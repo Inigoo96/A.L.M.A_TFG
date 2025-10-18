@@ -1,0 +1,62 @@
+# ==============================================================================
+# CONFIGURACIÓN DE SEGURIDAD JWT - EJEMPLO
+# ==============================================================================
+# IMPORTANTE: Este es un archivo de ejemplo. NO debe ser commiteado con valores reales.
+# Copia este archivo a application.properties o application-{profile}.properties
+# y configura los valores según tu entorno.
+
+# ==============================================================================
+# JWT Configuration
+# ==============================================================================
+
+# Clave secreta para firmar los tokens JWT
+# IMPORTANTE: En producción, esta clave DEBE ser:
+# 1. Al menos 64 caracteres de longitud (512 bits para HS512)
+# 2. Generada aleatoriamente y única por entorno
+# 3. Almacenada de forma segura (variables de entorno, vault, etc.)
+# 4. NUNCA commiteada en el repositorio
+#
+# Puedes generar una clave segura con:
+# - Online: https://www.allkeysgenerator.com/Random/Security-Encryption-Key-Generator.aspx
+# - Linux/Mac: openssl rand -base64 64
+# - Java: KeyGenerator.getInstance("HmacSHA512").generateKey()
+jwt.secret.key=REEMPLAZAR_CON_UNA_CLAVE_SECRETA_MUY_LARGA_Y_SEGURA_DE_AL_MENOS_64_CARACTERES_GENERADA_ALEATORIAMENTE
+
+# Tiempo de expiración del token en milisegundos
+# Por defecto: 36000000 ms = 10 horas
+# Ajustar según las necesidades de seguridad:
+# - 1 hora  = 3600000
+# - 8 horas = 28800000
+# - 24 horas = 86400000
+jwt.expiration.ms=36000000
+
+# Emisor del token (nombre de la aplicación)
+jwt.issuer=alma-backend
+
+# ==============================================================================
+# CORS Configuration
+# ==============================================================================
+# Configurar en SecurityConfig.java según los orígenes permitidos
+# Ejemplo:
+# - Desarrollo: http://localhost:3000, http://localhost:4200
+# - Producción: https://tu-dominio.com
+
+# ==============================================================================
+# RECOMENDACIONES DE SEGURIDAD
+# ==============================================================================
+# 1. Usar variables de entorno para valores sensibles:
+#    jwt.secret.key=${JWT_SECRET_KEY}
+#
+# 2. Diferentes claves para cada entorno (dev, test, prod)
+#
+# 3. Rotar la clave secreta periódicamente en producción
+#
+# 4. Usar HTTPS en producción
+#
+# 5. Implementar refresh tokens para sesiones largas
+#
+# 6. Considerar almacenar tokens en HttpOnly cookies en lugar de localStorage
+#
+# 7. Implementar rate limiting para endpoints de autenticación
+#
+# 8. Logs de auditoría para intentos de login fallidos

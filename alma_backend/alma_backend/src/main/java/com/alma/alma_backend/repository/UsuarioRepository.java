@@ -8,10 +8,31 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repositorio para la entidad Usuario.
+ * Proporciona métodos de acceso a datos para usuarios.
+ */
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
+    /**
+     * Busca un usuario por su email.
+     * @param email El email del usuario
+     * @return Optional con el usuario si existe
+     */
     Optional<Usuario> findByEmail(String email);
 
+    /**
+     * Verifica si existe un usuario con el email dado.
+     * @param email El email a verificar
+     * @return true si existe, false si no
+     */
+    boolean existsByEmail(String email);
+
+    /**
+     * Busca usuarios por tipo.
+     * @param tipoUsuario El tipo de usuario
+     * @return Lista de usuarios del tipo especificado
+     */
     List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
 }

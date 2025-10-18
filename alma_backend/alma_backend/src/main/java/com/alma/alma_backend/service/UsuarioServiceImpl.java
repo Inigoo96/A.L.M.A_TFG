@@ -35,6 +35,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
+    }
+
+    @Override
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
