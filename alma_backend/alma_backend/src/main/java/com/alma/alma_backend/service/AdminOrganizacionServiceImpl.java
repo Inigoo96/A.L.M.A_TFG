@@ -1,9 +1,14 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.entity.AdminOrganizacion;
+import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.repository.AdminOrganizacionRepository;
+import com.alma.alma_backend.repository.OrganizacionRepository;
+import com.alma.alma_backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +19,33 @@ public class AdminOrganizacionServiceImpl implements AdminOrganizacionService {
     @Autowired
     private AdminOrganizacionRepository adminOrganizacionRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private OrganizacionRepository organizacionRepository;
+
     @Override
-    public AdminOrganizacion save(AdminOrganizacion adminOrganizacion) {
-        return adminOrganizacionRepository.save(adminOrganizacion);
+    @Transactional
+    public AdminOrganizacion save(AdminOrganizacion adminRequest) {
+        if (adminRequest.getUsuario() == null || adminRequest.getUsuario().getIdUsuario() == null) {
+            throw new RuntimeException("El ID del usuario es obligatorio");
+        }
+        if (adminRequest.getOrganizacion() == null || adminRequest.getOrganizacion().getIdOrganizacion() == null) {
+            throw new RuntimeException("El ID de la organización es obligatorio");
+        }
+
+        Usuario usuario = usuarioRepository.findById(adminRequest.getUsuario().getIdUsuario())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + adminRequest.getUsuario().getIdUsuario()));
+
+        Organizacion organizacion = organizacionRepository.findById(adminRequest.getOrganizacion().getIdOrganizacion())
+                .orElseThrow(() -> new RuntimeException("Organización no encontrada con id: " + adminRequest.getOrganizacion().getIdOrganizacion()));
+
+        AdminOrganizacion nuevoAdmin = new AdminOrganizacion();
+        nuevoAdmin.setUsuario(usuario);
+        nuevoAdmin.setOrganizacion(organizacion);
+
+        return adminOrganizacionRepository.save(nuevoAdmin);
     }
 
     @Override

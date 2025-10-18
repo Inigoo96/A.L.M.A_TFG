@@ -1,9 +1,14 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.entity.AsignacionProfesionalPaciente;
+import com.alma.alma_backend.entity.Paciente;
+import com.alma.alma_backend.entity.Profesional;
 import com.alma.alma_backend.repository.AsignacionProfesionalPacienteRepository;
+import com.alma.alma_backend.repository.PacienteRepository;
+import com.alma.alma_backend.repository.ProfesionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,9 +19,35 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
     @Autowired
     private AsignacionProfesionalPacienteRepository asignacionRepository;
 
+    @Autowired
+    private ProfesionalRepository profesionalRepository;
+
+    @Autowired
+    private PacienteRepository pacienteRepository;
+
     @Override
-    public AsignacionProfesionalPaciente save(AsignacionProfesionalPaciente asignacion) {
-        return asignacionRepository.save(asignacion);
+    @Transactional
+    public AsignacionProfesionalPaciente save(AsignacionProfesionalPaciente asignacionRequest) {
+        if (asignacionRequest.getProfesional() == null || asignacionRequest.getProfesional().getIdProfesional() == null) {
+            throw new RuntimeException("El ID del profesional es obligatorio");
+        }
+        if (asignacionRequest.getPaciente() == null || asignacionRequest.getPaciente().getIdPaciente() == null) {
+            throw new RuntimeException("El ID del paciente es obligatorio");
+        }
+
+        Profesional profesional = profesionalRepository.findById(asignacionRequest.getProfesional().getIdProfesional())
+                .orElseThrow(() -> new RuntimeException("Profesional no encontrado con id: " + asignacionRequest.getProfesional().getIdProfesional()));
+
+        Paciente paciente = pacienteRepository.findById(asignacionRequest.getPaciente().getIdPaciente())
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + asignacionRequest.getPaciente().getIdPaciente()));
+
+        AsignacionProfesionalPaciente nuevaAsignacion = new AsignacionProfesionalPaciente();
+        nuevaAsignacion.setProfesional(profesional);
+        nuevaAsignacion.setPaciente(paciente);
+        nuevaAsignacion.setEsPrincipal(asignacionRequest.getEsPrincipal());
+        // El resto de campos (activo, fecha) se gestionan con @PrePersist y valores por defecto
+
+        return asignacionRepository.save(nuevaAsignacion);
     }
 
     @Override
