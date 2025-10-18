@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -31,26 +32,20 @@ public class Usuario {
     @Column(name = "APELLIDOS", length = 100)
     private String apellidos;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "TIPO_USUARIO", nullable = false, length = 20)
-    private String tipoUsuario;
+    private TipoUsuario tipoUsuario;
 
     @Column(name = "ACTIVO")
-    private Boolean activo = true;
+    @ColumnDefault("true")
+    private Boolean activo;
 
-    @Column(name = "FECHA_REGISTRO")
+    @Column(name = "FECHA_REGISTRO", updatable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime fechaRegistro;
 
     @Column(name = "ULTIMO_ACCESO")
     private LocalDateTime ultimoAcceso;
-
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private Profesional profesional;
-
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private Paciente paciente;
-
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private AdminOrganizacion adminOrganizacion;
 
     @PrePersist
     protected void onCreate() {

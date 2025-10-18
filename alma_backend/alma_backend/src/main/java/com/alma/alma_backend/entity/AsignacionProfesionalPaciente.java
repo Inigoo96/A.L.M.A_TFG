@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -28,13 +29,16 @@ public class AsignacionProfesionalPaciente {
     private Paciente paciente;
 
     @Column(name = "ES_PRINCIPAL")
-    private Boolean esPrincipal = true;
+    @ColumnDefault("true")
+    private Boolean esPrincipal;
 
-    @Column(name = "FECHA_ASIGNACION")
+    @Column(name = "FECHA_ASIGNACION", updatable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime fechaAsignacion;
 
     @Column(name = "ACTIVO")
-    private Boolean activo = true;
+    @ColumnDefault("true")
+    private Boolean activo;
 
     @PrePersist
     protected void onCreate() {

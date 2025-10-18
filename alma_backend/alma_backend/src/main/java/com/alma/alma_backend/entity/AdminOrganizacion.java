@@ -17,8 +17,8 @@ public class AdminOrganizacion {
     @Column(name = "ID_ADMIN")
     private Integer idAdmin;
 
-    @OneToOne
-    @JoinColumn(name = "ID_USUARIO", nullable = false, unique = true)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario;
 
     @ManyToOne

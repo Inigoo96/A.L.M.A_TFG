@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,8 +21,8 @@ public class Paciente {
     @Column(name = "ID_PACIENTE")
     private Integer idPaciente;
 
-    @OneToOne
-    @JoinColumn(name = "ID_USUARIO", nullable = false, unique = true)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario;
 
     @ManyToOne
@@ -31,9 +32,11 @@ public class Paciente {
     @Column(name = "FECHA_NACIMIENTO")
     private LocalDate fechaNacimiento;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "GENERO", length = 20)
-    private String genero;
+    private Genero genero;
 
-    @OneToMany(mappedBy = "paciente")
+    @OneToMany(mappedBy = "paciente", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<AsignacionProfesionalPaciente> asignaciones;
 }

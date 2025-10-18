@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,8 +20,8 @@ public class Profesional {
     @Column(name = "ID_PROFESIONAL")
     private Integer idProfesional;
 
-    @OneToOne
-    @JoinColumn(name = "ID_USUARIO", nullable = false, unique = true)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario;
 
     @ManyToOne
@@ -33,6 +34,7 @@ public class Profesional {
     @Column(name = "ESPECIALIDAD", length = 100)
     private String especialidad;
 
-    @OneToMany(mappedBy = "profesional")
+    @OneToMany(mappedBy = "profesional", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<AsignacionProfesionalPaciente> asignaciones;
 }

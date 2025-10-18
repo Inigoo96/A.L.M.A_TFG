@@ -1,9 +1,11 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,18 +35,23 @@ public class Organizacion {
     private String telefonoContacto;
 
     @Column(name = "ACTIVA")
-    private Boolean activa = true;
+    @ColumnDefault("true")
+    private Boolean activa;
 
-    @Column(name = "FECHA_ALTA")
+    @Column(name = "FECHA_ALTA", updatable = false)
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime fechaAlta;
 
-    @OneToMany(mappedBy = "organizacion")
+    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Profesional> profesionales;
 
-    @OneToMany(mappedBy = "organizacion")
+    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Paciente> pacientes;
 
-    @OneToMany(mappedBy = "organizacion")
+    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<AdminOrganizacion> administradores;
 
     @PrePersist
