@@ -35,4 +35,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * @return Lista de usuarios del tipo especificado
      */
     List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
+
+    /**
+     * Busca todos los usuarios que pertenecen a una organización específica.
+     * Spring Data JPA generará automáticamente la consulta SQL optimizada.
+     * @param organizacionId El ID de la organización
+     * @return Lista de usuarios de esa organización
+     */
+    List<Usuario> findByOrganizacionIdOrganizacion(Integer organizacionId);
 }

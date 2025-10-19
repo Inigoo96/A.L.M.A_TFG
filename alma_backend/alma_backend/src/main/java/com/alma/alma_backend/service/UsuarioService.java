@@ -24,6 +24,13 @@ public interface UsuarioService {
 
     List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
 
+    /**
+     * Busca todos los usuarios que pertenecen a una organización específica.
+     * @param organizacionId El ID de la organización
+     * @return Lista de usuarios de esa organización
+     */
+    List<Usuario> findByOrganizacionId(Integer organizacionId);
+
     void deleteById(Integer id);
 
     Usuario updateUser(Integer id, Usuario usuarioDetails);

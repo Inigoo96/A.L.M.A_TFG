@@ -50,6 +50,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    public List<Usuario> findByOrganizacionId(Integer organizacionId) {
+        return usuarioRepository.findByOrganizacionIdOrganizacion(organizacionId);
+    }
+
+    @Override
     public void deleteById(Integer id) {
         usuarioRepository.deleteById(id);
     }
