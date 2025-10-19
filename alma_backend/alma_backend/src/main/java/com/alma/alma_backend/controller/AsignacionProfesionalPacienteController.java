@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/asignaciones")
@@ -32,29 +31,23 @@ public class AsignacionProfesionalPacienteController {
         return ResponseEntity.ok(asignacionService.save(asignacion));
     }
 
-    // CORREGIDO: Ahora comprueba la organización
+    // OPTIMIZADO Y SEGURO
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<AsignacionProfesionalPaciente>> getAsignacionesByPacienteId(@PathVariable Integer pacienteId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
 
-        List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByPacienteId(pacienteId);
-        if (asignaciones.stream().anyMatch(a -> !Objects.equals(a.getPaciente().getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByPacienteIdAndOrganizacionId(pacienteId, userOrgId);
         return ResponseEntity.ok(asignaciones);
     }
 
-    // CORREGIDO: Ahora comprueba la organización
+    // OPTIMIZADO Y SEGURO
     @GetMapping("/profesional/{profesionalId}")
     public ResponseEntity<List<AsignacionProfesionalPaciente>> getAsignacionesByProfesionalId(@PathVariable Integer profesionalId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
 
-        List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByProfesionalId(profesionalId);
-        if (asignaciones.stream().anyMatch(a -> !Objects.equals(a.getProfesional().getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId))) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByProfesionalIdAndOrganizacionId(profesionalId, userOrgId);
         return ResponseEntity.ok(asignaciones);
     }
 

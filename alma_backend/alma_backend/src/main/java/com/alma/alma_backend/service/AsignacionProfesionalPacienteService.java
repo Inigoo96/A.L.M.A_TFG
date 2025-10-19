@@ -15,6 +15,23 @@ public interface AsignacionProfesionalPacienteService {
 
     List<AsignacionProfesionalPaciente> findByProfesionalId(Integer profesionalId);
 
+    /**
+     * Busca las asignaciones de un paciente, asegurando que pertenezca a la organización especificada.
+     * @param pacienteId ID del paciente
+     * @param organizacionId ID de la organización
+     * @return Lista de asignaciones
+     */
+    List<AsignacionProfesionalPaciente> findByPacienteIdAndOrganizacionId(Integer pacienteId, Integer organizacionId);
+
+    /**
+     * Busca las asignaciones de un profesional, asegurando que pertenezca a la organización especificada.
+     * @param profesionalId ID del profesional
+     * @param organizacionId ID de la organización
+     * @return Lista de asignaciones
+     */
+    List<AsignacionProfesionalPaciente> findByProfesionalIdAndOrganizacionId(Integer profesionalId, Integer organizacionId);
+
+
     List<AsignacionProfesionalPaciente> findActivasByPacienteId(Integer pacienteId);
 
     Optional<AsignacionProfesionalPaciente> findPrincipalByPacienteId(Integer pacienteId);

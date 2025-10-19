@@ -13,27 +13,35 @@ import java.util.Optional;
 @Repository
 public interface AsignacionProfesionalPacienteRepository extends JpaRepository<AsignacionProfesionalPaciente, Integer> {
 
-    // Encontrar todas las asignaciones de un paciente (activas e inactivas)
+    // Métodos de búsqueda simples (potencialmente inseguros si no se usan con cuidado)
     List<AsignacionProfesionalPaciente> findByPaciente_IdPaciente(Integer idPaciente);
-
-    // Encontrar todas las asignaciones de un profesional (activas e inactivas)
     List<AsignacionProfesionalPaciente> findByProfesional_IdProfesional(Integer idProfesional);
 
-    // Encontrar asignaciones activas para un paciente
-    List<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndActivoTrue(Integer idPaciente);
-
-    // Encontrar asignaciones activas para un profesional
-    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesionalAndActivoTrue(Integer idProfesional);
-
-    // Encontrar la asignación principal de un paciente
-    Optional<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndEsPrincipalTrueAndActivoTrue(Integer idPaciente);
+    // --- MÉTODOS OPTIMIZADOS Y SEGUROS ---
 
     /**
-     * Obtiene los detalles completos de una asignación específica.
-     *
-     * @param idAsignacion ID de la asignación
-     * @return Optional con el DTO detallado de la asignación
+     * Busca las asignaciones de un paciente, asegurando que pertenezca a la organización especificada.
+     * @param idPaciente ID del paciente
+     * @param idOrganizacion ID de la organización
+     * @return Lista de asignaciones
      */
+    List<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndPaciente_Usuario_Organizacion_IdOrganizacion(Integer idPaciente, Integer idOrganizacion);
+
+    /**
+     * Busca las asignaciones de un profesional, asegurando que pertenezca a la organización especificada.
+     * @param idProfesional ID del profesional
+     * @param idOrganizacion ID de la organización
+     * @return Lista de asignaciones
+     */
+    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesionalAndProfesional_Usuario_Organizacion_IdOrganizacion(Integer idProfesional, Integer idOrganizacion);
+
+
+    // --- Otros métodos existentes ---
+
+    List<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndActivoTrue(Integer idPaciente);
+    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesionalAndActivoTrue(Integer idProfesional);
+    Optional<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndEsPrincipalTrueAndActivoTrue(Integer idPaciente);
+
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
            "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
@@ -49,13 +57,6 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
            "WHERE a.idAsignacion = :idAsignacion")
     Optional<AsignacionDetalleDTO> findDetalleById(@Param("idAsignacion") Integer idAsignacion);
 
-    /**
-     * Obtiene todas las asignaciones de un profesional con detalles completos.
-     *
-     * @param idProfesional ID del profesional
-     * @param soloActivas Si es true, solo devuelve asignaciones activas
-     * @return Lista de asignaciones con detalles
-     */
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
            "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
@@ -75,13 +76,6 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
             @Param("idProfesional") Integer idProfesional,
             @Param("soloActivas") boolean soloActivas);
 
-    /**
-     * Obtiene todas las asignaciones de un paciente con detalles completos.
-     *
-     * @param idPaciente ID del paciente
-     * @param soloActivas Si es true, solo devuelve asignaciones activas
-     * @return Lista de asignaciones con detalles
-     */
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
            "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
@@ -101,13 +95,6 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
             @Param("idPaciente") Integer idPaciente,
             @Param("soloActivas") boolean soloActivas);
 
-    /**
-     * Obtiene todas las asignaciones de una organización con detalles completos.
-     *
-     * @param idOrganizacion ID de la organización
-     * @param soloActivas Si es true, solo devuelve asignaciones activas
-     * @return Lista de asignaciones con detalles
-     */
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
            "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
@@ -127,13 +114,6 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
             @Param("idOrganizacion") Integer idOrganizacion,
             @Param("soloActivas") boolean soloActivas);
 
-    /**
-     * Verifica si existe una asignación activa entre un profesional y un paciente específicos.
-     *
-     * @param idProfesional ID del profesional
-     * @param idPaciente ID del paciente
-     * @return true si existe una asignación activa, false en caso contrario
-     */
     @Query("SELECT COUNT(a) > 0 " +
            "FROM AsignacionProfesionalPaciente a " +
            "WHERE a.profesional.idProfesional = :idProfesional " +

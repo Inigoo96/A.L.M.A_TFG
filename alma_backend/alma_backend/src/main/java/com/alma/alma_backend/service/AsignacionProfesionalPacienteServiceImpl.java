@@ -66,6 +66,16 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
     }
 
     @Override
+    public List<AsignacionProfesionalPaciente> findByPacienteIdAndOrganizacionId(Integer pacienteId, Integer organizacionId) {
+        return asignacionRepository.findByPaciente_IdPacienteAndPaciente_Usuario_Organizacion_IdOrganizacion(pacienteId, organizacionId);
+    }
+
+    @Override
+    public List<AsignacionProfesionalPaciente> findByProfesionalIdAndOrganizacionId(Integer profesionalId, Integer organizacionId) {
+        return asignacionRepository.findByProfesional_IdProfesionalAndProfesional_Usuario_Organizacion_IdOrganizacion(profesionalId, organizacionId);
+    }
+
+    @Override
     public List<AsignacionProfesionalPaciente> findActivasByPacienteId(Integer pacienteId) {
         return asignacionRepository.findByPaciente_IdPacienteAndActivoTrue(pacienteId);
     }
