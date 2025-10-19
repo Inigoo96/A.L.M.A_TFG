@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,44 @@ import {
   Image,
   Animated,
   Pressable,
+  Alert,
 } from 'react-native';
 import {colors, fontSize, spacing, borderRadius} from '../../theme';
 
 const UserTypeSelectionScreen = ({navigation}: any) => {
   const scaleAnim1 = React.useRef(new Animated.Value(1)).current;
   const scaleAnim2 = React.useRef(new Animated.Value(1)).current;
+  const helpScaleAnim = React.useRef(new Animated.Value(1)).current;
+
+  // Animaciones de entrada
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const slideAnim1 = React.useRef(new Animated.Value(50)).current;
+  const slideAnim2 = React.useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    // Animación de entrada de los botones
+    Animated.stagger(150, [
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim1, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.spring(slideAnim2, {
+        toValue: 0,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handlePressIn = (scaleAnim: Animated.Value) => {
     Animated.spring(scaleAnim, {
@@ -30,6 +62,27 @@ const UserTypeSelectionScreen = ({navigation}: any) => {
     }).start();
   };
 
+  const handleHelpPress = () => {
+    Animated.sequence([
+      Animated.timing(helpScaleAnim, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(helpScaleAnim, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Alert.alert(
+      'Ayuda',
+      '• Organización: Si representas a una organización de salud mental y deseas crear cuentas para profesionales y pacientes.\n\n• Profesional o Paciente: Si ya tienes credenciales de acceso proporcionadas por tu organización.',
+      [{text: 'Entendido', style: 'default'}]
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Header compacto */}
@@ -43,9 +96,13 @@ const UserTypeSelectionScreen = ({navigation}: any) => {
         <Text style={styles.subtitle}>Elige cómo quieres acceder</Text>
       </View>
 
-      {/* Botones grandes y táctiles */}
+      {/* Botones grandes y táctiles con animación de entrada */}
       <View style={styles.buttonsContainer}>
-        <Animated.View style={{transform: [{scale: scaleAnim1}]}}>
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{scale: scaleAnim1}, {translateY: slideAnim1}],
+          }}>
           <Pressable
             style={({pressed}) => [
               styles.button,
@@ -67,7 +124,11 @@ const UserTypeSelectionScreen = ({navigation}: any) => {
           </Pressable>
         </Animated.View>
 
-        <Animated.View style={{transform: [{scale: scaleAnim2}]}}>
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{scale: scaleAnim2}, {translateY: slideAnim2}],
+          }}>
           <Pressable
             style={({pressed}) => [
               styles.button,
@@ -97,10 +158,19 @@ const UserTypeSelectionScreen = ({navigation}: any) => {
         </Text>
       </View>
 
-      {/* Botón de ayuda */}
-      <TouchableOpacity style={styles.helpButton}>
-        <Text style={styles.helpButtonText}>?</Text>
-      </TouchableOpacity>
+      {/* Botón de ayuda con animación */}
+      <Animated.View
+        style={[
+          styles.helpButtonContainer,
+          {transform: [{scale: helpScaleAnim}]},
+        ]}>
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={handleHelpPress}
+          activeOpacity={0.8}>
+          <Text style={styles.helpButtonText}>?</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };
@@ -116,8 +186,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     marginBottom: spacing.sm,
   },
   title: {
@@ -135,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    gap: spacing.lg,
+    gap: spacing.xl, // Aumentado el espacio entre botones
   },
   button: {
     flexDirection: 'row',
@@ -147,7 +217,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 6,
-    minHeight: 100,
+    minHeight: 110, // Ligeramente más alto
   },
   buttonPrimary: {
     backgroundColor: colors.primary,
@@ -162,19 +232,20 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
+    width: 64,
+    height: 64,
     borderRadius: borderRadius.xl,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.lg, // Más espacio entre icono y texto
   },
   icon: {
-    fontSize: 32,
+    fontSize: 34, // Icono ligeramente más grande
   },
   buttonContent: {
     flex: 1,
+    justifyContent: 'center', // Centrado vertical del texto
   },
   buttonTitle: {
     fontSize: fontSize.lg,
@@ -183,9 +254,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   buttonSubtitle: {
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md, // Tamaño aumentado para mejor legibilidad
     color: colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   footer: {
     paddingVertical: spacing.xl,
@@ -193,18 +264,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm, // Ligeramente más grande
     color: colors.mediumGreen,
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  helpButton: {
+  helpButtonContainer: {
     position: 'absolute',
-    top: spacing.xl,
-    right: spacing.lg,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    top: spacing.xl, // Alineado con el paddingTop del header
+    right: spacing.lg, // Alineado con el paddingHorizontal de los botones
+    zIndex: 999,
+  },
+  helpButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',

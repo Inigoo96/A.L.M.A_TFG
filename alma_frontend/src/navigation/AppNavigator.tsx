@@ -6,6 +6,7 @@ import UserTypeSelectionScreen from '../screens/Auth/UserTypeSelectionScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterOrganizationScreen from '../screens/Auth/RegisterOrganizationScreen';
 import ChangePasswordScreen from '../screens/Auth/ChangePasswordScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 
 export type RootStackParamList = {
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   Login: undefined;
   RegisterOrganization: undefined;
   ChangePassword: undefined;
+  ForgotPassword: undefined;
   Dashboard: undefined;
 };
 
@@ -32,6 +34,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="RegisterOrganization" component={RegisterOrganizationScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
       </Stack.Navigator>
     </NavigationContainer>

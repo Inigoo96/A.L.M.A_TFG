@@ -10,15 +10,81 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
+  Animated,
+  Pressable,
 } from 'react-native';
 import authService from '../../services/authService';
 import {colors, fontSize, spacing, borderRadius} from '../../theme';
 
 const ChangePasswordScreen = ({navigation}: any) => {
   const [oldPassword, setOldPassword] = useState('');
+  const [oldPasswordFocused, setOldPasswordFocused] = useState(false);
+  const [oldPasswordError, setOldPasswordError] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+
   const [newPassword, setNewPassword] = useState('');
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
+  const [newPasswordError, setNewPasswordError] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
+
+  // Animación para el botón
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+  });
+
+  const checkPasswordStrength = (password: string) => {
+    const minLength = password.length >= 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    let score = 0;
+    if (minLength) score++;
+    if (hasUpper) score++;
+    if (hasLower) score++;
+    if (hasNumber) score++;
+    if (hasSpecial) score++;
+
+    setPasswordStrength({
+      score,
+      hasMinLength: minLength,
+      hasUpperCase: hasUpper,
+      hasLowerCase: hasLower,
+      hasNumber: hasNumber,
+      hasSpecialChar: hasSpecial,
+    });
+  };
+
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handleChangePassword = async () => {
     if (!oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
@@ -31,8 +97,16 @@ const ChangePasswordScreen = ({navigation}: any) => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (passwordStrength.score < 3) {
+      Alert.alert(
+        'Error',
+        'La contraseña debe cumplir al menos tres de los siguientes requisitos:\n' +
+        '- Mínimo 8 caracteres\n' +
+        '- Al menos una mayúscula\n' +
+        '- Al menos una minúscula\n' +
+        '- Al menos un número\n' +
+        '- Al menos un carácter especial',
+      );
       return;
     }
 
@@ -62,64 +136,268 @@ const ChangePasswordScreen = ({navigation}: any) => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled">
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/images/alma_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
         <View style={styles.formContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Cambiar Contraseña</Text>
-            <Text style={styles.subtitle}>
-              Tu contraseña es temporal. Por seguridad, debes cambiarla antes de continuar.
-            </Text>
-          </View>
+          <Text style={styles.formTitle}>Cambiar Contraseña</Text>
+          <Text style={styles.subtitle}>
+            Tu contraseña es temporal. Por seguridad, debes cambiarla antes de continuar.
+          </Text>
 
           <View style={styles.alertBox}>
             <Text style={styles.alertText}>
-              ℹ️ La nueva contraseña debe tener al menos 6 caracteres
+              ℹ️ La nueva contraseña debe cumplir los requisitos de seguridad
             </Text>
           </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Contraseña actual"
-            value={oldPassword}
-            onChangeText={setOldPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            editable={!loading}
-            placeholderTextColor={colors.mediumGreen}
-          />
+          {/* Campo de Contraseña Actual */}
+          <View style={styles.inputSection}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>Contraseña actual</Text>
+            </View>
+            <View
+              style={[
+                styles.inputContainer,
+                oldPasswordFocused && styles.inputContainerFocused,
+                oldPasswordError && styles.inputContainerError,
+              ]}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                onFocus={() => setOldPasswordFocused(true)}
+                onBlur={() => setOldPasswordFocused(false)}
+                secureTextEntry={!showOldPassword}
+                autoCapitalize="none"
+                editable={!loading}
+                placeholderTextColor={colors.mediumGreen}
+              />
+              <TouchableOpacity
+                onPress={() => setShowOldPassword(!showOldPassword)}
+                style={styles.eyeButton}
+                disabled={loading}>
+                <Text style={styles.eyeText}>
+                  {showOldPassword ? 'Ocultar' : 'Mostrar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {oldPasswordError ? (
+              <Text style={styles.errorText}>{oldPasswordError}</Text>
+            ) : null}
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Nueva contraseña"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            editable={!loading}
-            placeholderTextColor={colors.mediumGreen}
-          />
+          {/* Campo de Nueva Contraseña */}
+          <View style={styles.inputSection}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>Nueva contraseña</Text>
+            </View>
+            <View
+              style={[
+                styles.inputContainer,
+                newPasswordFocused && styles.inputContainerFocused,
+                newPasswordError && styles.inputContainerError,
+              ]}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                value={newPassword}
+                onChangeText={text => {
+                  setNewPassword(text);
+                  checkPasswordStrength(text);
+                }}
+                onFocus={() => setNewPasswordFocused(true)}
+                onBlur={() => setNewPasswordFocused(false)}
+                secureTextEntry={!showNewPassword}
+                autoCapitalize="none"
+                editable={!loading}
+                placeholderTextColor={colors.mediumGreen}
+              />
+              <TouchableOpacity
+                onPress={() => setShowNewPassword(!showNewPassword)}
+                style={styles.eyeButton}
+                disabled={loading}>
+                <Text style={styles.eyeText}>
+                  {showNewPassword ? 'Ocultar' : 'Mostrar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {newPasswordError ? (
+              <Text style={styles.errorText}>{newPasswordError}</Text>
+            ) : null}
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirmar nueva contraseña"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            editable={!loading}
-            placeholderTextColor={colors.mediumGreen}
-          />
+            {/* Medidor de seguridad de contraseña */}
+            {newPassword.length > 0 && (
+              <View style={styles.passwordStrengthContainer}>
+                <Text style={styles.strengthText}>
+                  Seguridad de la contraseña:{' '}
+                {passwordStrength.score === 0
+                  ? 'Muy débil'
+                  : passwordStrength.score === 1
+                  ? 'Débil'
+                  : passwordStrength.score === 2
+                  ? 'Media'
+                  : passwordStrength.score === 3
+                  ? 'Fuerte'
+                  : 'Muy fuerte'}
+              </Text>
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            <View style={styles.strengthMeter}>
+              <View
+                style={[
+                  styles.strengthIndicator,
+                  {
+                    width: `${(passwordStrength.score / 5) * 100}%`,
+                    backgroundColor:
+                      passwordStrength.score <= 1
+                        ? '#ff4757'
+                        : passwordStrength.score === 2
+                        ? '#ffa502'
+                        : passwordStrength.score === 3
+                        ? '#2ed573'
+                        : '#20bf6b',
+                  },
+                ]}
+              />
+            </View>
+
+            <View style={styles.requirementsList}>
+              <Text
+                style={[
+                  styles.requirementText,
+                  passwordStrength.hasMinLength && styles.requirementMet,
+                ]}>
+                ✓ Mínimo 8 caracteres
+              </Text>
+              <Text
+                style={[
+                  styles.requirementText,
+                  passwordStrength.hasUpperCase && styles.requirementMet,
+                ]}>
+                ✓ Al menos una mayúscula
+              </Text>
+              <Text
+                style={[
+                  styles.requirementText,
+                  passwordStrength.hasLowerCase && styles.requirementMet,
+                ]}>
+                ✓ Al menos una minúscula
+              </Text>
+              <Text
+                style={[
+                  styles.requirementText,
+                  passwordStrength.hasNumber && styles.requirementMet,
+                ]}>
+                ✓ Al menos un número
+              </Text>
+              <Text
+                style={[
+                  styles.requirementText,
+                  passwordStrength.hasSpecialChar && styles.requirementMet,
+                ]}>
+                ✓ Al menos un carácter especial
+              </Text>
+            </View>
+          </View>
+          )}
+          </View>
+            
+          {/* Campo de Confirmar Contraseña */}
+          <View style={styles.inputSection}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>Confirmar nueva contraseña</Text>
+            </View>
+            <View
+              style={[
+                styles.inputContainer,
+                confirmPasswordFocused && styles.inputContainerFocused,
+                confirmPasswordError && styles.inputContainerError,
+              ]}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                onFocus={() => setConfirmPasswordFocused(true)}
+                onBlur={() => setConfirmPasswordFocused(false)}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                editable={!loading}
+                placeholderTextColor={colors.mediumGreen}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeButton}
+                disabled={loading}>
+                <Text style={styles.eyeText}>
+                  {showConfirmPassword ? 'Ocultar' : 'Mostrar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {confirmPasswordError ? (
+              <Text style={styles.errorText}>{confirmPasswordError}</Text>
+            ) : confirmPassword ? (
+              <View style={styles.passwordMatchContainer}>
+                <View
+                  style={[
+                    styles.passwordMatchIndicator,
+                    newPassword === confirmPassword
+                      ? styles.passwordMatchSuccess
+                      : styles.passwordMatchError,
+                  ]}>
+                  <Text style={styles.passwordMatchIcon}>
+                    {newPassword === confirmPassword ? '✓' : '×'}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.passwordMatchText,
+                    newPassword === confirmPassword
+                      ? styles.passwordMatchTextSuccess
+                      : styles.passwordMatchTextError,
+                  ]}>
+                  {newPassword === confirmPassword
+                    ? 'Las contraseñas coinciden'
+                    : 'Las contraseñas no coinciden'}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Botón de cambiar contraseña con animación */}
+          <Pressable
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
             onPress={handleChangePassword}
             disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.buttonText}>Cambiar Contraseña</Text>
-            )}
-          </TouchableOpacity>
+            <Animated.View
+              style={[
+                styles.button,
+                loading && styles.buttonDisabled,
+                {transform: [{scale: buttonScale}]},
+              ]}>
+              {loading ? (
+                <ActivityIndicator color={colors.white} />
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Text style={styles.buttonText}>Cambiar Contraseña</Text>
+                  <Text style={styles.buttonIcon}>→</Text>
+                </View>
+              )}
+            </Animated.View>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -133,36 +411,102 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     padding: spacing.lg,
   },
-  formContainer: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.secondary,
-  },
   header: {
+    alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  title: {
-    fontSize: fontSize.xl,
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: spacing.sm,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  formTitle: {
+    fontSize: fontSize.xxxl,
     fontWeight: 'bold',
     color: colors.darkGreen,
+    marginBottom: spacing.xl,
     textAlign: 'center',
-    marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: fontSize.sm,
     color: colors.mediumGreen,
     textAlign: 'center',
     lineHeight: 20,
+    marginBottom: spacing.lg,
+  },
+  // Sección de input con label
+  inputSection: {
+    marginBottom: spacing.md,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+    marginRight: spacing.xs,
+  },
+  inputLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.darkGreen,
+  },
+  // Container del input con icono
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputContainerFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  inputContainerError: {
+    borderColor: '#e74c3c',
+    backgroundColor: '#fff5f5',
+  },
+  inputIcon: {
+    fontSize: 20,
+    marginRight: spacing.sm,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+  },
+  eyeButton: {
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
+  },
+  eyeText: {
+    fontSize: fontSize.xs,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  errorText: {
+    fontSize: fontSize.xs,
+    color: '#e74c3c',
+    marginTop: spacing.xs,
+    marginLeft: spacing.xs,
+    fontWeight: '500',
   },
   alertBox: {
     backgroundColor: colors.info + '40',
@@ -176,36 +520,114 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
   },
-  input: {
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    fontSize: fontSize.md,
-    color: colors.textPrimary,
-  },
+  // Botón mejorado con contenido y animación
   button: {
     backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
-    marginTop: spacing.md,
-    shadowColor: colors.shadowMedium,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+    shadowColor: colors.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    minHeight: 56,
   },
   buttonDisabled: {
     backgroundColor: colors.mediumGreen,
     opacity: 0.6,
+    shadowOpacity: 0.1,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   buttonText: {
     color: colors.white,
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+  },
+  buttonIcon: {
+    color: colors.white,
+    fontSize: fontSize.xl,
+    fontWeight: 'bold',
+  },
+
+  // Estilos del medidor de seguridad de contraseña
+  passwordStrengthContainer: {
+    marginTop: spacing.xs,
+    padding: spacing.sm,
+  },
+  strengthMeter: {
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    marginVertical: spacing.xs,
+    overflow: 'hidden',
+  },
+  strengthIndicator: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  strengthText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    color: colors.darkGreen,
+  },
+  requirementsList: {
+    marginTop: spacing.xs,
+  },
+  requirementText: {
+    fontSize: fontSize.xs,
+    color: colors.mediumGreen,
+    marginVertical: 2,
+  },
+  requirementMet: {
+    color: '#2ecc71',
+    fontWeight: '600',
+  },
+  // Estilos del indicador de coincidencia de contraseñas
+  passwordMatchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
+  },
+  passwordMatchIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  passwordMatchSuccess: {
+    backgroundColor: '#2ecc71',
+  },
+  passwordMatchError: {
+    backgroundColor: '#e74c3c',
+  },
+  passwordMatchIcon: {
+    color: colors.white,
     fontSize: fontSize.md,
     fontWeight: 'bold',
+  },
+  passwordMatchText: {
+    fontSize: fontSize.xs,
+    fontWeight: '500',
+  },
+  passwordMatchTextSuccess: {
+    color: '#2ecc71',
+  },
+  passwordMatchTextError: {
+    color: '#e74c3c',
   },
 });
 
