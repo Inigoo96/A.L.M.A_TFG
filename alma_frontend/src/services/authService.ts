@@ -19,6 +19,15 @@ export interface UpdatePasswordRequest {
   newPassword: string;
 }
 
+export interface RegisterOrganizationRequest {
+  nombreOrganizacion: string;
+  cif: string;
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
+}
+
 class AuthService {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
@@ -80,6 +89,34 @@ class AuthService {
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getToken();
     return token !== null;
+  }
+
+  async registerOrganization(data: RegisterOrganizationRequest): Promise<LoginResponse> {
+    try {
+      console.log('Registrando organización:', data.nombreOrganizacion);
+
+      const response = await api.post<LoginResponse>('/auth/register-organization', data);
+
+      console.log('Organización registrada exitosamente:', response.data);
+
+      // Guardar el token automáticamente tras el registro
+      await AsyncStorage.setItem('jwt_token', response.data.access_token);
+      await AsyncStorage.setItem('user_email', response.data.email);
+      await AsyncStorage.setItem('user_type', response.data.role);
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      console.error('Error response:', error.response);
+
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      if (error.message) {
+        throw new Error(error.message);
+      }
+      throw new Error('Error al registrar la organización. Por favor, intenta de nuevo.');
+    }
   }
 }
 

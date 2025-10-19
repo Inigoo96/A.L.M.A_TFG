@@ -6,9 +6,12 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
+import {colors, fontSize, spacing, borderRadius} from '../theme';
 
 const DashboardScreen = ({navigation}: any) => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +29,16 @@ const DashboardScreen = ({navigation}: any) => {
     setUserType(type || '');
   };
 
+  const getRoleLabel = (role: string): string => {
+    const roleLabels: {[key: string]: string} = {
+      ADMIN_ORGANIZACION: 'Administrador de Organización',
+      PROFESIONAL: 'Profesional',
+      PACIENTE: 'Paciente',
+      SUPERADMIN: 'Super Administrador',
+    };
+    return roleLabels[role] || role;
+  };
+
   const handleLogout = async () => {
     Alert.alert(
       'Cerrar sesión',
@@ -41,7 +54,7 @@ const DashboardScreen = ({navigation}: any) => {
             setLoading(true);
             try {
               await authService.logout();
-              navigation.replace('Login');
+              navigation.replace('UserTypeSelection');
             } catch (error) {
               Alert.alert('Error', 'No se pudo cerrar la sesión');
             } finally {
@@ -55,33 +68,68 @@ const DashboardScreen = ({navigation}: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>A.L.M.A.</Text>
-        <Text style={styles.welcomeText}>¡Bienvenido!</Text>
-
-        <View style={styles.userInfoContainer}>
-          <Text style={styles.userInfoLabel}>Usuario:</Text>
-          <Text style={styles.userInfoValue}>{userEmail}</Text>
-
-          <Text style={styles.userInfoLabel}>Tipo de usuario:</Text>
-          <Text style={styles.userInfoValue}>{userType}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Image
+            source={require('../assets/images/alma_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>A.L.M.A.</Text>
+          <Text style={styles.subtitle}>Panel Principal</Text>
         </View>
 
-        <Text style={styles.comingSoonText}>
-          Más funcionalidades próximamente...
-        </Text>
+        {/* Welcome Card */}
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeTitle}>¡Bienvenido!</Text>
+          <Text style={styles.welcomeText}>
+            Gracias por confiar en nosotros para acompañarte en este proceso
+          </Text>
+        </View>
 
+        {/* User Info Card */}
+        <View style={styles.infoCard}>
+          <Text style={styles.cardTitle}>Información de Usuario</Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoValue}>{userEmail}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Rol:</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>{getRoleLabel(userType)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Coming Soon Card */}
+        <View style={styles.comingSoonCard}>
+          <Text style={styles.comingSoonTitle}>Próximamente</Text>
+          <Text style={styles.comingSoonText}>
+            • Gestión de pacientes{'\n'}
+            • Recursos de apoyo{'\n'}
+            • Chat con profesionales{'\n'}
+            • Y mucho más...
+          </Text>
+        </View>
+
+        {/* Logout Button */}
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.logoutButton, loading && styles.buttonDisabled]}
           onPress={handleLogout}
           disabled={loading}>
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>Cerrar Sesión</Text>
+            <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
           )}
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -89,67 +137,144 @@ const DashboardScreen = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
+  scrollContent: {
+    padding: spacing.lg,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    marginTop: spacing.lg,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: spacing.md,
   },
   title: {
-    fontSize: 36,
+    fontSize: fontSize.xxxl,
     fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
+    color: colors.darkGreen,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    fontSize: fontSize.lg,
+    color: colors.mediumGreen,
+  },
+  welcomeCard: {
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  welcomeTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: 'bold',
+    color: colors.white,
+    marginBottom: spacing.sm,
   },
   welcomeText: {
-    fontSize: 24,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 40,
+    fontSize: fontSize.md,
+    color: colors.white,
+    lineHeight: 22,
+    opacity: 0.95,
   },
-  userInfoContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 30,
+  infoCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  cardTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    marginBottom: spacing.lg,
+  },
+  infoRow: {
+    marginBottom: spacing.md,
+  },
+  infoLabel: {
+    fontSize: fontSize.sm,
+    color: colors.mediumGreen,
+    marginBottom: spacing.xs,
+  },
+  infoValue: {
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
+  roleBadge: {
+    backgroundColor: colors.secondary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    alignSelf: 'flex-start',
+  },
+  roleBadgeText: {
+    fontSize: fontSize.sm,
+    color: colors.darkGreen,
+    fontWeight: '600',
+  },
+  comingSoonCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.secondary,
+  },
+  comingSoonTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    marginBottom: spacing.md,
+  },
+  comingSoonText: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+    lineHeight: 24,
+  },
+  logoutButton: {
+    backgroundColor: colors.error,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    shadowColor: colors.shadowMedium,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  userInfoLabel: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 10,
-  },
-  userInfoValue: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  comingSoonText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 30,
-  },
-  button: {
-    backgroundColor: '#FF3B30',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    opacity: 0.6,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+  logoutButtonText: {
+    color: colors.white,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
   },
 });

@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import authService from '../../services/authService';
+import {colors, fontSize, spacing, borderRadius} from '../../theme';
 
 const ChangePasswordScreen = ({navigation}: any) => {
   const [oldPassword, setOldPassword] = useState('');
@@ -63,10 +64,18 @@ const ChangePasswordScreen = ({navigation}: any) => {
       style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Cambiar Contraseña</Text>
-          <Text style={styles.subtitle}>
-            Tu contraseña es temporal. Por favor, cámbiala para continuar.
-          </Text>
+          <View style={styles.header}>
+            <Text style={styles.title}>Cambiar Contraseña</Text>
+            <Text style={styles.subtitle}>
+              Tu contraseña es temporal. Por seguridad, debes cambiarla antes de continuar.
+            </Text>
+          </View>
+
+          <View style={styles.alertBox}>
+            <Text style={styles.alertText}>
+              ℹ️ La nueva contraseña debe tener al menos 6 caracteres
+            </Text>
+          </View>
 
           <TextInput
             style={styles.input}
@@ -76,6 +85,7 @@ const ChangePasswordScreen = ({navigation}: any) => {
             secureTextEntry
             autoCapitalize="none"
             editable={!loading}
+            placeholderTextColor={colors.mediumGreen}
           />
 
           <TextInput
@@ -86,6 +96,7 @@ const ChangePasswordScreen = ({navigation}: any) => {
             secureTextEntry
             autoCapitalize="none"
             editable={!loading}
+            placeholderTextColor={colors.mediumGreen}
           />
 
           <TextInput
@@ -96,6 +107,7 @@ const ChangePasswordScreen = ({navigation}: any) => {
             secureTextEntry
             autoCapitalize="none"
             editable={!loading}
+            placeholderTextColor={colors.mediumGreen}
           />
 
           <TouchableOpacity
@@ -103,7 +115,7 @@ const ChangePasswordScreen = ({navigation}: any) => {
             onPress={handleChangePassword}
             disabled={loading}>
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.buttonText}>Cambiar Contraseña</Text>
             )}
@@ -117,58 +129,82 @@ const ChangePasswordScreen = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: spacing.lg,
   },
   formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
     shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.secondary,
+  },
+  header: {
+    marginBottom: spacing.lg,
+  },
+  title: {
+    fontSize: fontSize.xl,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: fontSize.sm,
+    color: colors.mediumGreen,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  alertBox: {
+    backgroundColor: colors.info + '40',
+    borderLeftWidth: 4,
+    borderLeftColor: colors.info,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.lg,
+  },
+  alertText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  input: {
+    backgroundColor: colors.inputBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    marginTop: spacing.md,
+    shadowColor: colors.shadowMedium,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: colors.mediumGreen,
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: colors.white,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
   },
 });

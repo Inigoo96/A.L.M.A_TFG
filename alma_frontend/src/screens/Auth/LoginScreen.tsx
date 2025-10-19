@@ -10,8 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import authService from '../../services/authService';
+import {colors, fontSize, spacing, borderRadius} from '../../theme';
 
 const LoginScreen = ({navigation}: any) => {
   const [email, setEmail] = useState('');
@@ -48,9 +50,18 @@ const LoginScreen = ({navigation}: any) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.formContainer}>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/images/alma_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>A.L.M.A.</Text>
-          <Text style={styles.subtitle}>Bienvenido</Text>
+          <Text style={styles.subtitle}>Acompañamiento en el duelo</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <Text style={styles.formTitle}>Iniciar Sesión</Text>
 
           <TextInput
             style={styles.input}
@@ -61,6 +72,7 @@ const LoginScreen = ({navigation}: any) => {
             autoCapitalize="none"
             autoCorrect={false}
             editable={!loading}
+            placeholderTextColor={colors.mediumGreen}
           />
 
           <TextInput
@@ -71,6 +83,7 @@ const LoginScreen = ({navigation}: any) => {
             secureTextEntry
             autoCapitalize="none"
             editable={!loading}
+            placeholderTextColor={colors.mediumGreen}
           />
 
           <TouchableOpacity
@@ -78,10 +91,23 @@ const LoginScreen = ({navigation}: any) => {
             onPress={handleLogin}
             disabled={loading}>
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.buttonText}>Iniciar Sesión</Text>
             )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>o</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => navigation.navigate('UserTypeSelection')}
+            disabled={loading}>
+            <Text style={styles.linkText}>¿Primera vez? Volver al inicio</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -92,59 +118,105 @@ const LoginScreen = ({navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: spacing.lg,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: spacing.md,
+  },
+  title: {
+    fontSize: fontSize.xxxl,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: fontSize.md,
+    color: colors.mediumGreen,
+    fontStyle: 'italic',
   },
   formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
     shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  formTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  input: {
+    backgroundColor: colors.inputBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    marginTop: spacing.md,
+    shadowColor: colors.shadowMedium,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: colors.mediumGreen,
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: colors.white,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    marginHorizontal: spacing.md,
+    color: colors.mediumGreen,
+    fontSize: fontSize.sm,
+  },
+  linkButton: {
+    alignItems: 'center',
+  },
+  linkText: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
   },
 });
 
