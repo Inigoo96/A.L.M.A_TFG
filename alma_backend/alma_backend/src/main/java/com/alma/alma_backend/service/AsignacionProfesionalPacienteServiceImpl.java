@@ -3,6 +3,7 @@ package com.alma.alma_backend.service;
 import com.alma.alma_backend.entity.AsignacionProfesionalPaciente;
 import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.entity.Profesional;
+import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.AsignacionProfesionalPacienteRepository;
 import com.alma.alma_backend.repository.PacienteRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
@@ -29,23 +30,22 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
     @Transactional
     public AsignacionProfesionalPaciente save(AsignacionProfesionalPaciente asignacionRequest) {
         if (asignacionRequest.getProfesional() == null || asignacionRequest.getProfesional().getIdProfesional() == null) {
-            throw new RuntimeException("El ID del profesional es obligatorio");
+            throw new IllegalStateException("El ID del profesional es obligatorio");
         }
         if (asignacionRequest.getPaciente() == null || asignacionRequest.getPaciente().getIdPaciente() == null) {
-            throw new RuntimeException("El ID del paciente es obligatorio");
+            throw new IllegalStateException("El ID del paciente es obligatorio");
         }
 
         Profesional profesional = profesionalRepository.findById(asignacionRequest.getProfesional().getIdProfesional())
-                .orElseThrow(() -> new RuntimeException("Profesional no encontrado con id: " + asignacionRequest.getProfesional().getIdProfesional()));
+                .orElseThrow(() -> new ResourceNotFoundException("Profesional no encontrado con id: " + asignacionRequest.getProfesional().getIdProfesional()));
 
         Paciente paciente = pacienteRepository.findById(asignacionRequest.getPaciente().getIdPaciente())
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + asignacionRequest.getPaciente().getIdPaciente()));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + asignacionRequest.getPaciente().getIdPaciente()));
 
         AsignacionProfesionalPaciente nuevaAsignacion = new AsignacionProfesionalPaciente();
         nuevaAsignacion.setProfesional(profesional);
         nuevaAsignacion.setPaciente(paciente);
         nuevaAsignacion.setEsPrincipal(asignacionRequest.getEsPrincipal());
-        // El resto de campos (activo, fecha) se gestionan con @PrePersist y valores por defecto
 
         return asignacionRepository.save(nuevaAsignacion);
     }
@@ -93,7 +93,7 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
     @Override
     public AsignacionProfesionalPaciente deactivateAsignacion(Integer id) {
         AsignacionProfesionalPaciente asignacion = asignacionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Asignación no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Asignación no encontrada con id: " + id));
         asignacion.setActivo(false);
         return asignacionRepository.save(asignacion);
     }

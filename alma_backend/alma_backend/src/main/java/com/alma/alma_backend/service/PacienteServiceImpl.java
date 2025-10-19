@@ -2,6 +2,7 @@ package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.PacienteDetalleDTO;
 import com.alma.alma_backend.entity.Paciente;
+import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.PacienteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,20 +49,21 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     public Paciente updatePaciente(Integer id, Paciente pacienteDetails) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
 
         // La lógica de actualización solo debe modificar los campos propios del perfil de Paciente.
-        // Los datos del Usuario (nombre, email, etc.) se deben actualizar a través de un UsuarioService.
-        paciente.setFechaNacimiento(pacienteDetails.getFechaNacimiento());
-        paciente.setGenero(pacienteDetails.getGenero());
+        if (pacienteDetails.getFechaNacimiento() != null) {
+            paciente.setFechaNacimiento(pacienteDetails.getFechaNacimiento());
+        }
+        if (pacienteDetails.getGenero() != null) {
+            paciente.setGenero(pacienteDetails.getGenero());
+        }
 
         return pacienteRepository.save(paciente);
     }
 
     @Override
     public Paciente save(Paciente paciente) {
-        // Este método ahora simplemente persiste la entidad. La lógica de negocio
-        // (validaciones, asignación de organización, etc.) ya no reside aquí.
         return pacienteRepository.save(paciente);
     }
 

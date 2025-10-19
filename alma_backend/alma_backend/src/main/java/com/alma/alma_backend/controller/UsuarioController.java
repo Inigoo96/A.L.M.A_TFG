@@ -2,6 +2,7 @@ package com.alma.alma_backend.controller;
 
 import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')") // Solo los administradores pueden gestionar usuarios "en crudo"
+@PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
 public class UsuarioController {
 
     @Autowired
@@ -37,7 +38,7 @@ public class UsuarioController {
         }
 
         Organizacion organizacion = organizacionRepository.findById(usuario.getOrganizacion().getIdOrganizacion())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La organización especificada no existe."));
+                .orElseThrow(() -> new ResourceNotFoundException("La organización especificada no existe."));
 
         usuario.setOrganizacion(organizacion);
         usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
@@ -47,20 +48,17 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUsuario);
     }
 
-    // OPTIMIZADO: Ahora usa una consulta directa a la base de datos.
     @GetMapping
     public ResponseEntity<List<Usuario>> getAllUsuarios(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
 
-        // Llama al nuevo método optimizado del servicio
         List<Usuario> usuariosDeLaOrganizacion = usuarioService.findByOrganizacionId(userOrgId);
 
         return ResponseEntity.ok(usuariosDeLaOrganizacion);
     }
 
-    // CORREGIDO: Ahora comprueba que el usuario pertenezca a la organización del admin.
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> getUsuarioById(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
@@ -74,31 +72,29 @@ public class UsuarioController {
                     }
                     return ResponseEntity.ok(usuario);
                 })
-                .orElse(ResponseEntity.notFound().<Usuario>build());
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
-    // CORREGIDO: Ahora comprueba los permisos antes de actualizar.
+    // CORREGIDO: Se elimina el try-catch para dejar que el GlobalExceptionHandler actúe.
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> updateUsuario(@PathVariable Integer id, @RequestBody Usuario usuarioDetails, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
 
+        // Primero, asegurar que el usuario a actualizar existe y pertenece a la organización.
         return usuarioService.findById(id)
                 .map(usuarioExistente -> {
                     if (!Objects.equals(usuarioExistente.getOrganizacion().getIdOrganizacion(), userOrgId)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<Usuario>build();
                     }
-                    try {
-                        return ResponseEntity.ok(usuarioService.updateUser(id, usuarioDetails));
-                    } catch (RuntimeException e) {
-                        return ResponseEntity.notFound().<Usuario>build();
-                    }
+                    // Si todo es correcto, se procede a la actualización.
+                    Usuario updatedUsuario = usuarioService.updateUser(id, usuarioDetails);
+                    return ResponseEntity.ok(updatedUsuario);
                 })
-                .orElse(ResponseEntity.notFound().<Usuario>build());
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
-    // CORREGIDO: Ahora comprueba los permisos antes de borrar.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUsuario(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())

@@ -57,14 +57,10 @@ public class AuthenticationController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * Endpoint para registrar una nueva Organización y su primer Administrador.
-     */
     @PostMapping("/register-organization")
     @Transactional
     public ResponseEntity<?> registerOrganization(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            // 1. Validar que la organización o el email del admin no existan ya
             if (organizacionRepository.existsByCif(registerRequest.getCif())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El CIF de la organización ya está registrado"));
             }
@@ -72,26 +68,23 @@ public class AuthenticationController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El email del administrador ya está en uso"));
             }
 
-            // 2. Crear y guardar la nueva Organización
             Organizacion newOrganizacion = new Organizacion();
             newOrganizacion.setNombreOrganizacion(registerRequest.getNombreOrganizacion());
             newOrganizacion.setCif(registerRequest.getCif());
             Organizacion savedOrganizacion = organizacionRepository.save(newOrganizacion);
 
-            // 3. Crear el usuario Administrador de la Organización
             Usuario newUser = new Usuario();
             newUser.setEmail(registerRequest.getEmail().toLowerCase().trim());
             newUser.setNombre(registerRequest.getNombre().trim());
             newUser.setApellidos(registerRequest.getApellidos().trim());
             newUser.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-            newUser.setTipoUsuario(TipoUsuario.ADMIN_ORGANIZACION); // Asignar rol de admin
-            newUser.setOrganizacion(savedOrganizacion); // ¡Vincular a su organización!
+            newUser.setOrganizacion(savedOrganizacion);
+            newUser.setTipoUsuario(TipoUsuario.ADMIN_ORGANIZACION);
 
             Usuario savedUser = usuarioService.save(newUser);
 
             logger.info("Organización '{}' y administrador '{}' registrados exitosamente", savedOrganizacion.getNombreOrganizacion(), savedUser.getEmail());
 
-            // 4. Generar token JWT para el nuevo administrador
             final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
             final String jwt = jwtUtil.generateToken(userDetails);
 

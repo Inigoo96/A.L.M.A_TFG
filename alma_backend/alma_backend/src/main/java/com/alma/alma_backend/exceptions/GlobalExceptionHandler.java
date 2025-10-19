@@ -3,6 +3,8 @@ package com.alma.alma_backend.exceptions;
 import com.alma.alma_backend.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -39,9 +41,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    // NUEVO MANEJADOR: Específico para excepciones de seguridad.
+    // Se ejecutará antes que el manejador genérico de 'Exception'.
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex) {
+        ErrorResponse error = new ErrorResponse("Acceso denegado. No tiene los permisos necesarios para realizar esta acción.");
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    // Este manejador ahora solo atrapará errores verdaderamente inesperados.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        // Log the exception details for debugging
+        // En un entorno real, aquí se registraría el error con más detalle.
         // logger.error("Unhandled exception occurred: ", ex);
         ErrorResponse error = new ErrorResponse("Ocurrió un error inesperado en el servidor.");
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);

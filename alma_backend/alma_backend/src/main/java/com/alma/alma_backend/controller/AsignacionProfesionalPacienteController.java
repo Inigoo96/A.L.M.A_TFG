@@ -2,6 +2,7 @@ package com.alma.alma_backend.controller;
 
 import com.alma.alma_backend.entity.AsignacionProfesionalPaciente;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.service.AsignacionProfesionalPacienteService;
 import com.alma.alma_backend.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +26,11 @@ public class AsignacionProfesionalPacienteController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // La creación ya se gestiona de forma segura en AdminOrganizacionController
     @PostMapping
     public ResponseEntity<AsignacionProfesionalPaciente> createAsignacion(@RequestBody AsignacionProfesionalPaciente asignacion) {
         return ResponseEntity.ok(asignacionService.save(asignacion));
     }
 
-    // OPTIMIZADO Y SEGURO
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<AsignacionProfesionalPaciente>> getAsignacionesByPacienteId(@PathVariable Integer pacienteId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -41,7 +40,6 @@ public class AsignacionProfesionalPacienteController {
         return ResponseEntity.ok(asignaciones);
     }
 
-    // OPTIMIZADO Y SEGURO
     @GetMapping("/profesional/{profesionalId}")
     public ResponseEntity<List<AsignacionProfesionalPaciente>> getAsignacionesByProfesionalId(@PathVariable Integer profesionalId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -51,7 +49,7 @@ public class AsignacionProfesionalPacienteController {
         return ResponseEntity.ok(asignaciones);
     }
 
-    // CORREGIDO: Ahora comprueba la organización
+    // CORREGIDO: Se elimina el try-catch para dejar que el GlobalExceptionHandler actúe.
     @PutMapping("/{id}/deactivate")
     public ResponseEntity<AsignacionProfesionalPaciente> deactivateAsignacion(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -61,15 +59,11 @@ public class AsignacionProfesionalPacienteController {
             if (!Objects.equals(asignacion.getProfesional().getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).<AsignacionProfesionalPaciente>build();
             }
-            try {
-                return ResponseEntity.ok(asignacionService.deactivateAsignacion(id));
-            } catch (RuntimeException e) {
-                return ResponseEntity.notFound().<AsignacionProfesionalPaciente>build();
-            }
-        }).orElse(ResponseEntity.notFound().<AsignacionProfesionalPaciente>build());
+            AsignacionProfesionalPaciente deactivatedAsignacion = asignacionService.deactivateAsignacion(id);
+            return ResponseEntity.ok(deactivatedAsignacion);
+        }).orElseThrow(() -> new ResourceNotFoundException("Asignación no encontrada con id: " + id));
     }
 
-    // CORREGIDO: Ahora comprueba la organización
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAsignacion(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

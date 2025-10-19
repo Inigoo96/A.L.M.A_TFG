@@ -2,6 +2,7 @@ package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,6 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario save(Usuario usuario) {
-        // La lógica de hasheo de contraseña se movió al controlador para más flexibilidad
         return usuarioRepository.save(usuario);
     }
 
@@ -45,13 +45,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario) {
-        return usuarioRepository.findByTipoUsuario(tipoUsuario);
+    public List<Usuario> findByOrganizacionId(Integer organizacionId) {
+        return usuarioRepository.findByOrganizacionIdOrganizacion(organizacionId);
     }
 
     @Override
-    public List<Usuario> findByOrganizacionId(Integer organizacionId) {
-        return usuarioRepository.findByOrganizacionIdOrganizacion(organizacionId);
+    public List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario) {
+        return usuarioRepository.findByTipoUsuario(tipoUsuario);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Usuario updateUser(Integer id, Usuario usuarioDetails) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         // Actualizar solo los campos que se proporcionan y no son nulos
         if (usuarioDetails.getNombre() != null && !usuarioDetails.getNombre().isEmpty()) {
@@ -77,8 +77,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuarioDetails.getActivo() != null) {
             usuario.setActivo(usuarioDetails.getActivo());
         }
-
-        // Por seguridad, no se permite cambiar la contraseña, el rol o la organización desde este método genérico.
 
         return usuarioRepository.save(usuario);
     }
