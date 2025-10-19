@@ -33,6 +33,7 @@ CREATE TABLE USUARIO (
     ACTIVO BOOLEAN DEFAULT TRUE,
     FECHA_REGISTRO TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ULTIMO_ACCESO TIMESTAMP,
+    PASSWORD_TEMPORAL BOOLEAN DEFAULT TRUE,
 
     CONSTRAINT PK_USUARIO PRIMARY KEY (ID_USUARIO),
     CONSTRAINT NN_EMAIL CHECK (EMAIL IS NOT NULL),
@@ -107,6 +108,7 @@ CREATE TABLE ADMIN_ORGANIZACION (
 -- ============================================
 
 COMMENT ON TABLE USUARIO IS 'Tabla principal de todos los usuarios del sistema';
+COMMENT ON COLUMN USUARIO.PASSWORD_TEMPORAL IS 'Si es TRUE, el usuario debe cambiar su contraseña en el próximo inicio de sesión.';
 COMMENT ON TABLE ORGANIZACION IS 'Organizaciones B2B/B2G que contratan el servicio A.L.M.A';
 COMMENT ON TABLE PROFESIONAL IS 'Profesionales de salud mental vinculados a organizaciones';
 COMMENT ON TABLE PACIENTE IS 'Pacientes en proceso de duelo atendidos por profesionales';

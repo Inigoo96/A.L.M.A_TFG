@@ -51,6 +51,10 @@ public class Usuario {
     @Column(name = "ULTIMO_ACCESO")
     private LocalDateTime ultimoAcceso;
 
+    @Column(name = "PASSWORD_TEMPORAL")
+    @ColumnDefault("true")
+    private Boolean passwordTemporal;
+
     @PrePersist
     protected void onCreate() {
         if (fechaRegistro == null) {
@@ -58,6 +62,9 @@ public class Usuario {
         }
         if (activo == null) {
             activo = true;
+        }
+        if (passwordTemporal == null) {
+            passwordTemporal = true;
         }
     }
 }

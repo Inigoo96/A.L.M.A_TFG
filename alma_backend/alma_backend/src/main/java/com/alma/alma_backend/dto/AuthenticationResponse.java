@@ -24,10 +24,20 @@ public class AuthenticationResponse {
     @JsonProperty("token_type")
     private String tokenType = "Bearer";
 
+    @JsonProperty("password_temporal")
+    private Boolean passwordTemporal;
+
+    public AuthenticationResponse(String jwt, String email, String role, Boolean passwordTemporal) {
+        this.jwt = jwt;
+        this.email = email;
+        this.role = role;
+        this.passwordTemporal = passwordTemporal;
+    }
+
     public AuthenticationResponse(String jwt, String email, String role) {
         this.jwt = jwt;
         this.email = email;
         this.role = role;
-        this.tokenType = "Bearer";
+        this.passwordTemporal = false;
     }
 }

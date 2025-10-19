@@ -80,6 +80,7 @@ public class AuthenticationController {
             newUser.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
             newUser.setOrganizacion(savedOrganizacion);
             newUser.setTipoUsuario(TipoUsuario.ADMIN_ORGANIZACION);
+            newUser.setPasswordTemporal(false);
 
             Usuario savedUser = usuarioService.save(newUser);
 
@@ -90,7 +91,7 @@ public class AuthenticationController {
 
             return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AuthenticationResponse(jwt, savedUser.getEmail(), savedUser.getTipoUsuario().name()));
+                .body(new AuthenticationResponse(jwt, savedUser.getEmail(), savedUser.getTipoUsuario().name(), savedUser.getPasswordTemporal()));
 
         } catch (DataIntegrityViolationException e) {
             logger.error("Error de integridad al registrar organización: {}", e.getMessage());
@@ -118,7 +119,7 @@ public class AuthenticationController {
             logger.info("Usuario autenticado exitosamente: {}", email);
 
             return ResponseEntity.ok(
-                new AuthenticationResponse(jwt, usuario.getEmail(), usuario.getTipoUsuario().name())
+                new AuthenticationResponse(jwt, usuario.getEmail(), usuario.getTipoUsuario().name(), usuario.getPasswordTemporal())
             );
 
         } catch (BadCredentialsException e) {
