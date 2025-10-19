@@ -15,6 +15,7 @@ import {
   Pressable,
 } from 'react-native';
 import authService from '../../services/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {colors, fontSize, spacing, borderRadius} from '../../theme';
 
 const ChangePasswordScreen = ({navigation}: any) => {
@@ -114,10 +115,13 @@ const ChangePasswordScreen = ({navigation}: any) => {
 
     try {
       await authService.updatePassword(oldPassword, newPassword);
+      
+      // Actualizar el estado de la contraseña temporal
+      await AsyncStorage.setItem('password_temporal', 'false');
 
       Alert.alert(
         'Éxito',
-        'Contraseña actualizada correctamente',
+        'Contraseña actualizada correctamente. Ya puedes usar todas las funciones de la aplicación.',
         [
           {
             text: 'OK',

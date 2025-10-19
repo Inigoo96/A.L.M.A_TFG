@@ -34,30 +34,64 @@ class AuthService {
       console.log('Intentando login con email:', email);
       console.log('URL completa:', 'http://localhost:8080/api/auth/login');
 
-      const response = await api.post<LoginResponse>('/auth/login', {
-        email,
-        password,
-      });
+      // Asegurarnos de que el objeto de la petición coincide exactamente con lo que espera el backend
+      const loginData = {
+        email: email.trim(),
+        password: password
+      };
 
-      console.log('Respuesta del servidor:', response.data);
+      console.log('Datos a enviar:', JSON.stringify(loginData, null, 2));
 
-      // Guardar el token en AsyncStorage
+      const response = await api.post<LoginResponse>('/auth/login', loginData);
+
+      console.log('Respuesta del servidor:', JSON.stringify(response.data, null, 2));
+
+      // Guardar el token y datos del usuario en AsyncStorage
       await AsyncStorage.setItem('jwt_token', response.data.access_token);
       await AsyncStorage.setItem('user_email', response.data.email);
       await AsyncStorage.setItem('user_type', response.data.role);
+      await AsyncStorage.setItem('password_temporal', String(response.data.password_temporal === true));
 
       return response.data;
     } catch (error: any) {
       console.error('Error completo:', error);
-      console.error('Error response:', error.response);
+      console.error('Error response:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', JSON.stringify(error.response?.headers, null, 2));
       console.error('Error message:', error.message);
+      console.error('Datos enviados:', JSON.stringify({ email, password: '***' }, null, 2));
 
+      // Manejo específico de errores según el código de estado
+      if (error.response?.status === 401) {
+        throw new Error('Email o contraseña incorrectos. Por favor, verifica tus credenciales.');
+      }
+
+      if (error.response?.status === 500) {
+        // Error 500 puede ser credenciales incorrectas (problema del backend)
+        throw new Error('Email o contraseña incorrectos. Si el problema persiste, contacta con soporte.');
+      }
+
+      if (error.response?.status === 403) {
+        throw new Error('Tu cuenta está deshabilitada. Contacta con el administrador.');
+      }
+
+      if (error.response?.status === 423) {
+        throw new Error('Tu cuenta está bloqueada. Contacta con el administrador.');
+      }
+
+      // Si hay un mensaje de error específico del servidor, lo mostramos
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
+
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+
       if (error.message) {
         throw new Error(error.message);
       }
+
       throw new Error('Error al iniciar sesión. Por favor, intenta de nuevo.');
     }
   }
@@ -80,6 +114,7 @@ class AuthService {
     await AsyncStorage.removeItem('jwt_token');
     await AsyncStorage.removeItem('user_email');
     await AsyncStorage.removeItem('user_type');
+    await AsyncStorage.removeItem('password_temporal');
   }
 
   async getToken(): Promise<string | null> {
@@ -103,6 +138,7 @@ class AuthService {
       await AsyncStorage.setItem('jwt_token', response.data.access_token);
       await AsyncStorage.setItem('user_email', response.data.email);
       await AsyncStorage.setItem('user_type', response.data.role);
+      await AsyncStorage.setItem('password_temporal', String(response.data.password_temporal === true));
 
       return response.data;
     } catch (error: any) {

@@ -68,9 +68,6 @@ const LoginScreen = ({navigation}: any) => {
     if (!password.trim()) {
       setPasswordError('La contraseña es obligatoria');
       hasErrors = true;
-    } else if (password.length < 8) {
-      setPasswordError('La contraseña debe tener al menos 8 caracteres');
-      hasErrors = true;
     }
 
     if (hasErrors) {
@@ -81,14 +78,8 @@ const LoginScreen = ({navigation}: any) => {
 
     try {
       const response = await authService.login(email.trim(), password);
-
-      // Si el password es temporal, redirigir a cambio de contraseña
-      if (response.password_temporal) {
-        navigation.replace('ChangePassword');
-      } else {
-        // Si no es temporal, ir al Dashboard
-        navigation.replace('Dashboard');
-      }
+      // Siempre redirigimos al Dashboard, allí mostraremos la alerta si es necesario
+      navigation.replace('Dashboard');
     } catch (error: any) {
       Alert.alert('Error de autenticación', error.message);
     } finally {

@@ -17,10 +17,66 @@ const DashboardScreen = ({navigation}: any) => {
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [userType, setUserType] = useState('');
+  const [isPasswordTemporary, setIsPasswordTemporary] = useState(false);
 
   useEffect(() => {
     loadUserData();
+    checkTemporaryPassword();
   }, []);
+
+  useEffect(() => {
+    let alertInterval: ReturnType<typeof setInterval> | null = null;
+    
+    if (isPasswordTemporary) {
+      alertInterval = setInterval(() => {
+        Alert.alert(
+          '⚠️ Contraseña Temporal - Acción Requerida',
+          'Por seguridad, es necesario cambiar tu contraseña temporal antes de continuar usando la aplicación. Esta es una medida de seguridad obligatoria.',
+          [
+            {
+              text: 'Cambiar ahora',
+              onPress: () => navigation.navigate('ChangePassword'),
+              style: 'default',
+            },
+          ],
+          { 
+            cancelable: false,
+          }
+        );
+      }, 300000); // Mostrar alerta cada 5 minutos
+    }
+
+    return () => {
+      if (alertInterval) {
+        clearInterval(alertInterval);
+      }
+    };
+  }, [isPasswordTemporary, navigation]);
+
+  const checkTemporaryPassword = async () => {
+    try {
+      const isTemp = await AsyncStorage.getItem('password_temporal');
+      if (isTemp === 'true') {
+        Alert.alert(
+          '⚠️ Contraseña Temporal - Acción Requerida',
+          'Por seguridad, es necesario cambiar tu contraseña temporal antes de continuar usando la aplicación. Esta es una medida de seguridad obligatoria.',
+          [
+            {
+              text: 'Cambiar ahora',
+              onPress: () => navigation.navigate('ChangePassword'),
+              style: 'default',
+            },
+          ],
+          { 
+            cancelable: false,
+          }
+        );
+        setIsPasswordTemporary(true);
+      }
+    } catch (error) {
+      console.error('Error al verificar contraseña temporal:', error);
+    }
+  };
 
   const loadUserData = async () => {
     const email = await AsyncStorage.getItem('user_email');
@@ -117,6 +173,17 @@ const DashboardScreen = ({navigation}: any) => {
             • Y mucho más...
           </Text>
         </View>
+
+        {/* Change Password Button (if temporary) */}
+        {isPasswordTemporary && (
+          <TouchableOpacity
+            style={[styles.changePasswordButton]}
+            onPress={() => navigation.navigate('ChangePassword')}>
+            <Text style={styles.changePasswordButtonText}>
+              Cambiar Contraseña Temporal
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Logout Button */}
         <TouchableOpacity
@@ -273,6 +340,23 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   logoutButtonText: {
+    color: colors.white,
+    fontSize: fontSize.md,
+    fontWeight: 'bold',
+  },
+  changePasswordButton: {
+    backgroundColor: colors.primary,
+    padding: spacing.md,
+    borderRadius: borderRadius.sm,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    shadowColor: colors.primary,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  changePasswordButtonText: {
     color: colors.white,
     fontSize: fontSize.md,
     fontWeight: 'bold',
