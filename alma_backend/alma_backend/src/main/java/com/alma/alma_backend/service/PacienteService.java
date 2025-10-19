@@ -16,6 +16,13 @@ public interface PacienteService {
 
     List<Paciente> findAll();
 
+    /**
+     * Busca todos los pacientes que pertenecen a una organización específica.
+     * @param organizacionId El ID de la organización
+     * @return Lista de pacientes de esa organización
+     */
+    List<Paciente> findByOrganizacionId(Integer organizacionId);
+
     void deleteById(Integer id);
 
     Paciente updatePaciente(Integer id, Paciente pacienteDetails);

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pacientes")
@@ -31,15 +30,15 @@ public class PacienteController {
         return ResponseEntity.ok(pacienteService.save(paciente));
     }
 
+    // OPTIMIZADO: Ahora usa una consulta directa a la base de datos.
     @GetMapping
     public ResponseEntity<List<Paciente>> getAllPacientes(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
 
-        List<Paciente> pacientesDeLaOrganizacion = pacienteService.findAll().stream()
-                .filter(paciente -> Objects.equals(paciente.getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId))
-                .collect(Collectors.toList());
+        // Llama al nuevo método optimizado del servicio
+        List<Paciente> pacientesDeLaOrganizacion = pacienteService.findByOrganizacionId(userOrgId);
 
         return ResponseEntity.ok(pacientesDeLaOrganizacion);
     }

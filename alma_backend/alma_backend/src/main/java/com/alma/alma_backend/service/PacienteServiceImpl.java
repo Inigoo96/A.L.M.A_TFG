@@ -36,6 +36,11 @@ public class PacienteServiceImpl implements PacienteService {
     }
 
     @Override
+    public List<Paciente> findByOrganizacionId(Integer organizacionId) {
+        return pacienteRepository.findByUsuario_Organizacion_IdOrganizacion(organizacionId);
+    }
+
+    @Override
     public void deleteById(Integer id) {
         pacienteRepository.deleteById(id);
     }
