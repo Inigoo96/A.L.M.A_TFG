@@ -1,5 +1,6 @@
 package com.alma.alma_backend.service;
 
+import com.alma.alma_backend.dto.PacienteDetalleDTO;
 import com.alma.alma_backend.entity.Paciente;
 
 import java.util.List;
@@ -13,11 +14,22 @@ public interface PacienteService {
 
     Optional<Paciente> findByUsuarioId(Integer usuarioId);
 
-    List<Paciente> findByOrganizacionId(Integer organizacionId);
-
     List<Paciente> findAll();
 
     void deleteById(Integer id);
 
     Paciente updatePaciente(Integer id, Paciente pacienteDetails);
+
+    // Métodos con DTOs optimizados
+    Optional<PacienteDetalleDTO> findDetalleById(Integer idPaciente);
+
+    List<PacienteDetalleDTO> findDetalleByOrganizacion(Integer idOrganizacion);
+
+    List<PacienteDetalleDTO> findActivosByOrganizacion(Integer idOrganizacion);
+
+    List<PacienteDetalleDTO> findPacientesByProfesional(Integer idProfesional, boolean soloActivos);
+
+    List<PacienteDetalleDTO> findSinAsignarByOrganizacion(Integer idOrganizacion);
+
+    List<PacienteDetalleDTO> searchByNombreAndOrganizacion(String searchTerm, Integer idOrganizacion);
 }

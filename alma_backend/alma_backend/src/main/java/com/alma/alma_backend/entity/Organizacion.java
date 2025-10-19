@@ -44,15 +44,7 @@ public class Organizacion {
 
     @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<Profesional> profesionales;
-
-    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Paciente> pacientes;
-
-    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<AdminOrganizacion> administradores;
+    private List<Usuario> usuarios;
 
     @PrePersist
     protected void onCreate() {

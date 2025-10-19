@@ -20,7 +20,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario save(Usuario usuario) {
-        // Aquí iría la lógica de hasheo de contraseña antes de guardar
+        // La lógica de hasheo de contraseña se movió al controlador para más flexibilidad
         return usuarioRepository.save(usuario);
     }
 
@@ -59,11 +59,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
 
-        usuario.setEmail(usuarioDetails.getEmail());
-        usuario.setNombre(usuarioDetails.getNombre());
-        usuario.setApellidos(usuarioDetails.getApellidos());
-        usuario.setActivo(usuarioDetails.getActivo());
-        // No se debería poder cambiar el tipo de usuario ni la contraseña directamente aquí
+        // Actualizar solo los campos que se proporcionan y no son nulos
+        if (usuarioDetails.getNombre() != null && !usuarioDetails.getNombre().isEmpty()) {
+            usuario.setNombre(usuarioDetails.getNombre());
+        }
+        if (usuarioDetails.getApellidos() != null) {
+            usuario.setApellidos(usuarioDetails.getApellidos());
+        }
+        if (usuarioDetails.getEmail() != null && !usuarioDetails.getEmail().isEmpty()) {
+            usuario.setEmail(usuarioDetails.getEmail());
+        }
+        if (usuarioDetails.getActivo() != null) {
+            usuario.setActivo(usuarioDetails.getActivo());
+        }
+
+        // Por seguridad, no se permite cambiar la contraseña, el rol o la organización desde este método genérico.
 
         return usuarioRepository.save(usuario);
     }

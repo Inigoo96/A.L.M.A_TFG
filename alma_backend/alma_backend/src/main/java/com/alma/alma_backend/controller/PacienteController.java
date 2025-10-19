@@ -39,11 +39,6 @@ public class PacienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/organizacion/{organizacionId}")
-    public ResponseEntity<List<Paciente>> getPacientesByOrganizacionId(@PathVariable Integer organizacionId) {
-        return ResponseEntity.ok(pacienteService.findByOrganizacionId(organizacionId));
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Paciente> updatePaciente(@PathVariable Integer id, @RequestBody Paciente pacienteDetails) {
         try {

@@ -1,34 +1,33 @@
 package com.alma.alma_backend.dto;
 
+import com.alma.alma_backend.entity.TipoUsuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class RegisterRequest {
+public class UserCreationRequest {
 
-    // Datos de la Organización
-    @NotBlank(message = "El nombre de la organización no puede estar vacío")
-    @Size(min = 2, max = 150, message = "El nombre de la organización debe tener entre 2 y 150 caracteres")
-    private String nombreOrganizacion;
-
-    @NotBlank(message = "El CIF no puede estar vacío")
-    @Size(min = 9, max = 9, message = "El CIF debe tener 9 caracteres")
-    private String cif;
-
-    // Datos del Administrador de la Organización
     @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
 
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
     private String apellidos;
 
-    @NotBlank(message = "El email no puede estar vacío")
+    @NotBlank(message = "El email не может быть пустым")
     @Email(message = "El formato del email es inválido")
     private String email;
 
     @NotBlank(message = "La contraseña no puede estar vacía")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
+
+    @NotNull(message = "El tipo de usuario es obligatorio")
+    private TipoUsuario tipoUsuario; // Será PACIENTE o PROFESIONAL
+
+    // Campos opcionales específicos para cada rol
+    private String numeroColegiado;
+    private String especialidad;
 }

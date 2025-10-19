@@ -1,11 +1,11 @@
 package com.alma.alma_backend.service;
 
-import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.dto.ProfesionalDetalleDTO;
+import com.alma.alma_backend.dto.ProfesionalEstadisticasDTO;
 import com.alma.alma_backend.entity.Profesional;
-import com.alma.alma_backend.entity.Usuario;
-import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
-import com.alma.alma_backend.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,43 +16,10 @@ import java.util.Optional;
 @Service
 public class ProfesionalServiceImpl implements ProfesionalService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProfesionalServiceImpl.class);
+
     @Autowired
     private ProfesionalRepository profesionalRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private OrganizacionRepository organizacionRepository;
-
-    @Override
-    @Transactional
-    public Profesional save(Profesional profesionalRequest) {
-        // 1. Validar que los IDs vienen en la petición
-        if (profesionalRequest.getUsuario() == null || profesionalRequest.getUsuario().getIdUsuario() == null) {
-            throw new RuntimeException("El ID del usuario es obligatorio");
-        }
-        if (profesionalRequest.getOrganizacion() == null || profesionalRequest.getOrganizacion().getIdOrganizacion() == null) {
-            throw new RuntimeException("El ID de la organización es obligatorio");
-        }
-
-        // 2. Cargar las entidades REALES desde la base de datos
-        Usuario usuario = usuarioRepository.findById(profesionalRequest.getUsuario().getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + profesionalRequest.getUsuario().getIdUsuario()));
-
-        Organizacion organizacion = organizacionRepository.findById(profesionalRequest.getOrganizacion().getIdOrganizacion())
-                .orElseThrow(() -> new RuntimeException("Organización no encontrada con id: " + profesionalRequest.getOrganizacion().getIdOrganizacion()));
-
-        // 3. Crear y ensamblar la nueva entidad Profesional
-        Profesional nuevoProfesional = new Profesional();
-        nuevoProfesional.setUsuario(usuario); // Entidad real, no el 'fantasma'
-        nuevoProfesional.setOrganizacion(organizacion); // Entidad real, no el 'fantasma'
-        nuevoProfesional.setNumeroColegiado(profesionalRequest.getNumeroColegiado());
-        nuevoProfesional.setEspecialidad(profesionalRequest.getEspecialidad());
-
-        // 4. Guardar la entidad Profesional correctamente ensamblada
-        return profesionalRepository.save(nuevoProfesional);
-    }
 
     @Override
     public Optional<Profesional> findById(Integer id) {
@@ -62,11 +29,6 @@ public class ProfesionalServiceImpl implements ProfesionalService {
     @Override
     public Optional<Profesional> findByUsuarioId(Integer usuarioId) {
         return profesionalRepository.findByUsuario_IdUsuario(usuarioId);
-    }
-
-    @Override
-    public List<Profesional> findByOrganizacionId(Integer organizacionId) {
-        return profesionalRepository.findByOrganizacion_IdOrganizacion(organizacionId);
     }
 
     @Override
@@ -86,8 +48,54 @@ public class ProfesionalServiceImpl implements ProfesionalService {
 
         profesional.setNumeroColegiado(profesionalDetails.getNumeroColegiado());
         profesional.setEspecialidad(profesionalDetails.getEspecialidad());
-        // El usuario y la organización no deberían cambiarse en una actualización simple
 
         return profesionalRepository.save(profesional);
+    }
+
+    @Override
+    public Profesional save(Profesional profesional) {
+        return profesionalRepository.save(profesional);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProfesionalDetalleDTO> findDetalleById(Integer idProfesional) {
+        logger.debug("Obteniendo detalle del profesional con ID: {}", idProfesional);
+        return profesionalRepository.findDetalleById(idProfesional);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProfesionalDetalleDTO> findDetalleByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo profesionales de la organización ID: {}", idOrganizacion);
+        return profesionalRepository.findDetalleByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProfesionalDetalleDTO> findActivosByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo profesionales activos de la organización ID: {}", idOrganizacion);
+        return profesionalRepository.findActivosByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProfesionalEstadisticasDTO> findEstadisticasByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo estadísticas de profesionales de la organización ID: {}", idOrganizacion);
+        return profesionalRepository.findEstadisticasByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProfesionalEstadisticasDTO> findEstadisticasById(Integer idProfesional) {
+        logger.debug("Obteniendo estadísticas del profesional ID: {}", idProfesional);
+        return profesionalRepository.findEstadisticasById(idProfesional);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProfesionalDetalleDTO> findByEspecialidadAndOrganizacion(String especialidad, Integer idOrganizacion) {
+        logger.debug("Buscando profesionales por especialidad '{}' en organización ID: {}", especialidad, idOrganizacion);
+        return profesionalRepository.findByEspecialidadAndOrganizacion(especialidad, idOrganizacion);
     }
 }

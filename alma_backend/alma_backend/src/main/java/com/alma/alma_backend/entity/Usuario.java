@@ -36,6 +36,10 @@ public class Usuario {
     @Column(name = "TIPO_USUARIO", nullable = false, length = 20)
     private TipoUsuario tipoUsuario;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "organizacion_id", nullable = false)
+    private Organizacion organizacion;
+
     @Column(name = "ACTIVO")
     @ColumnDefault("true")
     private Boolean activo;

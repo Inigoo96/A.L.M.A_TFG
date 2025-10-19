@@ -25,10 +25,6 @@ public class Paciente {
     @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario;
 
-    @ManyToOne
-    @JoinColumn(name = "ID_ORGANIZACION", nullable = false)
-    private Organizacion organizacion;
-
     @Column(name = "FECHA_NACIMIENTO")
     private LocalDate fechaNacimiento;
 

@@ -24,10 +24,6 @@ public class Profesional {
     @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario;
 
-    @ManyToOne
-    @JoinColumn(name = "ID_ORGANIZACION", nullable = false)
-    private Organizacion organizacion;
-
     @Column(name = "NUMERO_COLEGIADO", unique = true, length = 20)
     private String numeroColegiado;
 

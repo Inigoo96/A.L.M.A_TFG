@@ -1,11 +1,10 @@
 package com.alma.alma_backend.service;
 
-import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.dto.PacienteDetalleDTO;
 import com.alma.alma_backend.entity.Paciente;
-import com.alma.alma_backend.entity.Usuario;
-import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.repository.PacienteRepository;
-import com.alma.alma_backend.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,39 +15,10 @@ import java.util.Optional;
 @Service
 public class PacienteServiceImpl implements PacienteService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PacienteServiceImpl.class);
+
     @Autowired
     private PacienteRepository pacienteRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private OrganizacionRepository organizacionRepository;
-
-    @Override
-    @Transactional
-    public Paciente save(Paciente pacienteRequest) {
-        if (pacienteRequest.getUsuario() == null || pacienteRequest.getUsuario().getIdUsuario() == null) {
-            throw new RuntimeException("El ID del usuario es obligatorio");
-        }
-        if (pacienteRequest.getOrganizacion() == null || pacienteRequest.getOrganizacion().getIdOrganizacion() == null) {
-            throw new RuntimeException("El ID de la organización es obligatorio");
-        }
-
-        Usuario usuario = usuarioRepository.findById(pacienteRequest.getUsuario().getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + pacienteRequest.getUsuario().getIdUsuario()));
-
-        Organizacion organizacion = organizacionRepository.findById(pacienteRequest.getOrganizacion().getIdOrganizacion())
-                .orElseThrow(() -> new RuntimeException("Organización no encontrada con id: " + pacienteRequest.getOrganizacion().getIdOrganizacion()));
-
-        Paciente nuevoPaciente = new Paciente();
-        nuevoPaciente.setUsuario(usuario);
-        nuevoPaciente.setOrganizacion(organizacion);
-        nuevoPaciente.setFechaNacimiento(pacienteRequest.getFechaNacimiento());
-        nuevoPaciente.setGenero(pacienteRequest.getGenero());
-
-        return pacienteRepository.save(nuevoPaciente);
-    }
 
     @Override
     public Optional<Paciente> findById(Integer id) {
@@ -58,11 +28,6 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     public Optional<Paciente> findByUsuarioId(Integer usuarioId) {
         return pacienteRepository.findByUsuario_IdUsuario(usuarioId);
-    }
-
-    @Override
-    public List<Paciente> findByOrganizacionId(Integer organizacionId) {
-        return pacienteRepository.findByOrganizacion_IdOrganizacion(organizacionId);
     }
 
     @Override
@@ -80,9 +45,60 @@ public class PacienteServiceImpl implements PacienteService {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Paciente no encontrado con id: " + id));
 
+        // La lógica de actualización solo debe modificar los campos propios del perfil de Paciente.
+        // Los datos del Usuario (nombre, email, etc.) se deben actualizar a través de un UsuarioService.
         paciente.setFechaNacimiento(pacienteDetails.getFechaNacimiento());
         paciente.setGenero(pacienteDetails.getGenero());
 
         return pacienteRepository.save(paciente);
+    }
+
+    @Override
+    public Paciente save(Paciente paciente) {
+        // Este método ahora simplemente persiste la entidad. La lógica de negocio
+        // (validaciones, asignación de organización, etc.) ya no reside aquí.
+        return pacienteRepository.save(paciente);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PacienteDetalleDTO> findDetalleById(Integer idPaciente) {
+        logger.debug("Obteniendo detalle del paciente con ID: {}", idPaciente);
+        return pacienteRepository.findDetalleById(idPaciente);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteDetalleDTO> findDetalleByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo pacientes de la organización ID: {}", idOrganizacion);
+        return pacienteRepository.findDetalleByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteDetalleDTO> findActivosByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo pacientes activos de la organización ID: {}", idOrganizacion);
+        return pacienteRepository.findActivosByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteDetalleDTO> findPacientesByProfesional(Integer idProfesional, boolean soloActivos) {
+        logger.debug("Obteniendo pacientes del profesional ID: {} (soloActivos: {})", idProfesional, soloActivos);
+        return pacienteRepository.findPacientesByProfesional(idProfesional, soloActivos);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteDetalleDTO> findSinAsignarByOrganizacion(Integer idOrganizacion) {
+        logger.debug("Obteniendo pacientes sin asignar de la organización ID: {}", idOrganizacion);
+        return pacienteRepository.findSinAsignarByOrganizacion(idOrganizacion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteDetalleDTO> searchByNombreAndOrganizacion(String searchTerm, Integer idOrganizacion) {
+        logger.debug("Buscando pacientes por término '{}' en organización ID: {}", searchTerm, idOrganizacion);
+        return pacienteRepository.searchByNombreAndOrganizacion(searchTerm, idOrganizacion);
     }
 }

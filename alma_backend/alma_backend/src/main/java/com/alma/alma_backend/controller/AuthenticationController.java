@@ -4,8 +4,10 @@ import com.alma.alma_backend.dto.AuthenticationRequest;
 import com.alma.alma_backend.dto.AuthenticationResponse;
 import com.alma.alma_backend.dto.ErrorResponse;
 import com.alma.alma_backend.dto.RegisterRequest;
+import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.security.JwtUtil;
 import com.alma.alma_backend.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -24,11 +26,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controlador de autenticación que maneja el registro de usuarios y el login.
- */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
@@ -38,6 +38,7 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final UsuarioService usuarioService;
+    private final OrganizacionRepository organizacionRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
@@ -45,60 +46,52 @@ public class AuthenticationController {
     public AuthenticationController(AuthenticationManager authenticationManager,
                                     UserDetailsService userDetailsService,
                                     UsuarioService usuarioService,
+                                    OrganizacionRepository organizacionRepository,
                                     JwtUtil jwtUtil,
                                     PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.usuarioService = usuarioService;
+        this.organizacionRepository = organizacionRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Endpoint para registrar un nuevo usuario en el sistema.
+     * Endpoint para registrar una nueva Organización y su primer Administrador.
      */
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+    @PostMapping("/register-organization")
+    @Transactional
+    public ResponseEntity<?> registerOrganization(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            // Validar que el email no esté ya registrado
+            // 1. Validar que la organización o el email del admin no existan ya
+            if (organizacionRepository.existsByCif(registerRequest.getCif())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El CIF de la organización ya está registrado"));
+            }
             if (usuarioService.existsByEmail(registerRequest.getEmail())) {
-                logger.warn("Intento de registro con email ya existente: {}", registerRequest.getEmail());
-                return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(new ErrorResponse("El email ya está registrado"));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El email del administrador ya está en uso"));
             }
 
-            // Validar formato del email
-            if (!isValidEmail(registerRequest.getEmail())) {
-                return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("Formato de email inválido"));
-            }
+            // 2. Crear y guardar la nueva Organización
+            Organizacion newOrganizacion = new Organizacion();
+            newOrganizacion.setNombreOrganizacion(registerRequest.getNombreOrganizacion());
+            newOrganizacion.setCif(registerRequest.getCif());
+            Organizacion savedOrganizacion = organizacionRepository.save(newOrganizacion);
 
-            // Validar longitud de la contraseña
-            if (registerRequest.getPassword() == null || registerRequest.getPassword().length() < 8) {
-                return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("La contraseña debe tener al menos 8 caracteres"));
-            }
-
-            // Crear una nueva entidad Usuario a partir del DTO de registro
+            // 3. Crear el usuario Administrador de la Organización
             Usuario newUser = new Usuario();
             newUser.setEmail(registerRequest.getEmail().toLowerCase().trim());
             newUser.setNombre(registerRequest.getNombre().trim());
             newUser.setApellidos(registerRequest.getApellidos().trim());
-
-            // Hashear la contraseña del DTO antes de guardarla en la entidad
             newUser.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-
-            // Asignar un rol por defecto para los nuevos registros
-            newUser.setTipoUsuario(TipoUsuario.PACIENTE);
+            newUser.setTipoUsuario(TipoUsuario.ADMIN_ORGANIZACION); // Asignar rol de admin
+            newUser.setOrganizacion(savedOrganizacion); // ¡Vincular a su organización!
 
             Usuario savedUser = usuarioService.save(newUser);
 
-            logger.info("Usuario registrado exitosamente: {}", savedUser.getEmail());
+            logger.info("Organización '{}' y administrador '{}' registrados exitosamente", savedOrganizacion.getNombreOrganizacion(), savedUser.getEmail());
 
-            // Generar token JWT automáticamente tras el registro
+            // 4. Generar token JWT para el nuevo administrador
             final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
             final String jwt = jwtUtil.generateToken(userDetails);
 
@@ -107,41 +100,27 @@ public class AuthenticationController {
                 .body(new AuthenticationResponse(jwt, savedUser.getEmail(), savedUser.getTipoUsuario().name()));
 
         } catch (DataIntegrityViolationException e) {
-            logger.error("Error de integridad al registrar usuario: {}", e.getMessage());
-            return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(new ErrorResponse("El email ya está registrado"));
+            logger.error("Error de integridad al registrar organización: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("Conflicto de datos. El CIF o el email ya existen."));
         } catch (Exception e) {
-            logger.error("Error al registrar usuario: {}", e.getMessage(), e);
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Error al registrar el usuario"));
+            logger.error("Error inesperado al registrar organización: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error interno al registrar la organización"));
         }
     }
 
-    /**
-     * Endpoint para autenticar a un usuario y generar un token JWT.
-     */
     @PostMapping("/login")
     public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody AuthenticationRequest authenticationRequest) {
         try {
-            // Normalizar email
             String email = authenticationRequest.getEmail().toLowerCase().trim();
-
-            // Intentar autenticar al usuario
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, authenticationRequest.getPassword())
             );
 
-            // Si la autenticación es exitosa, cargar los detalles del usuario
             final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            // Generar token JWT
             final String jwt = jwtUtil.generateToken(userDetails);
 
-            // Obtener información adicional del usuario
             Usuario usuario = usuarioService.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado después de una autenticación exitosa. Error de consistencia de datos."));
 
             logger.info("Usuario autenticado exitosamente: {}", email);
 
@@ -150,41 +129,14 @@ public class AuthenticationController {
             );
 
         } catch (BadCredentialsException e) {
-            logger.warn("Intento de login fallido - credenciales incorrectas para: {}",
-                authenticationRequest.getEmail());
-            return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Email o contraseña incorrectos"));
-
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Email o contraseña incorrectos"));
         } catch (DisabledException e) {
-            logger.warn("Intento de login con cuenta deshabilitada: {}", authenticationRequest.getEmail());
-            return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse("La cuenta está deshabilitada"));
-
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("La cuenta está deshabilitada"));
         } catch (LockedException e) {
-            logger.warn("Intento de login con cuenta bloqueada: {}", authenticationRequest.getEmail());
-            return ResponseEntity
-                .status(HttpStatus.LOCKED)
-                .body(new ErrorResponse("La cuenta está bloqueada"));
-
+            return ResponseEntity.status(HttpStatus.LOCKED).body(new ErrorResponse("La cuenta está bloqueada"));
         } catch (Exception e) {
             logger.error("Error durante la autenticación: {}", e.getMessage(), e);
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Error durante la autenticación"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error durante la autenticación"));
         }
-    }
-
-    /**
-     * Valida que el formato del email sea correcto.
-     */
-    private boolean isValidEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        // Expresión regular básica para validar emails
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        return email.matches(emailRegex);
     }
 }
