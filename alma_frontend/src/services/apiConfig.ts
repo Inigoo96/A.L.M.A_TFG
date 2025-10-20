@@ -1,18 +1,20 @@
-import Config from 'react-native-config';
-
 /**
  * Configuración del servicio API con detección automática de IP
  *
  * En DESARROLLO:
  * - Intenta conectarse automáticamente probando IPs comunes en tu red
- * - Usa la IP configurada en .env como fallback
+ * - Usa la IP configurada directamente como fallback
  *
  * En PRODUCCIÓN:
- * - Usa la URL del .env (ej: https://api.tudominio.com)
+ * - Cambia FALLBACK_API_URL por tu dominio de producción
  */
 
 const BACKEND_PORT = '8080';
 const API_PATH = '/api';
+
+// Configuración de la IP del backend (cambiar según tu red)
+// Para obtener tu IP ejecuta: ipconfig (Windows) o ifconfig (Mac/Linux)
+const FALLBACK_API_URL = 'http://10.242.170.39:8080/api';
 
 // Lista de URLs a intentar en orden de prioridad
 let cachedBaseURL: string | null = null;
@@ -20,9 +22,9 @@ let cachedBaseURL: string | null = null;
 /**
  * Detecta automáticamente la URL del backend
  * Intenta diferentes estrategias en este orden:
- * 1. URL de producción del .env (si existe y no es localhost)
+ * 1. URL de producción (si está configurada)
  * 2. IPs comunes en redes privadas (probando múltiples rangos)
- * 3. IP configurada en .env
+ * 3. IP configurada como fallback
  * 4. Fallback a localhost
  */
 export async function detectBackendURL(): Promise<string> {
@@ -32,19 +34,20 @@ export async function detectBackendURL(): Promise<string> {
   }
 
   // 1. Si hay una URL de producción configurada (no localhost), usarla directamente
-  const envURL = Config.API_BASE_URL;
-  if (envURL && !envURL.includes('localhost') && !envURL.includes('127.0.0.1')) {
-    console.log('✅ Usando URL de producción:', envURL);
-    cachedBaseURL = envURL;
-    return envURL;
-  }
+  // Descomenta y configura esto para producción:
+  // const PRODUCTION_URL = 'https://api.tudominio.com/api';
+  // if (PRODUCTION_URL && !PRODUCTION_URL.includes('localhost')) {
+  //   console.log('✅ Usando URL de producción:', PRODUCTION_URL);
+  //   cachedBaseURL = PRODUCTION_URL;
+  //   return PRODUCTION_URL;
+  // }
 
   // 2. Intentar detectar automáticamente la IP del backend en la red local
   // Probamos rangos comunes de IPs privadas
   const commonIPRanges = [
     '172.17.21',  // Tu red actual
     '192.168.1',  // Red doméstica común
-    '192.168.0',  // Otra red doméstica común
+    '10.242.170.39',  // Otra red doméstica común
     '10.0.0',     // Red corporativa común
   ];
 
@@ -67,11 +70,11 @@ export async function detectBackendURL(): Promise<string> {
 
   console.warn('⚠️ No se pudo detectar el backend automáticamente');
 
-  // 3. Usar la IP configurada en .env como fallback
-  if (envURL) {
-    console.log('✅ Usando URL configurada en .env:', envURL);
-    cachedBaseURL = envURL;
-    return envURL;
+  // 3. Usar la IP configurada como fallback
+  if (FALLBACK_API_URL) {
+    console.log('✅ Usando URL configurada como fallback:', FALLBACK_API_URL);
+    cachedBaseURL = FALLBACK_API_URL;
+    return FALLBACK_API_URL;
   }
 
   // 4. Fallback final a localhost (solo funciona con adb reverse)

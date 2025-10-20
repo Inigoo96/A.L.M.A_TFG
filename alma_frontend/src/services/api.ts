@@ -13,6 +13,7 @@ const api = axios.create({
 
 // Inicializar la detección automática de la URL del backend
 let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 async function initializeAPI() {
   if (!isInitialized) {
@@ -23,13 +24,24 @@ async function initializeAPI() {
   }
 }
 
-// Inicializar inmediatamente
-initializeAPI();
+// Inicializar inmediatamente y guardar la promesa
+initPromise = initializeAPI();
+
+// Función para asegurar que la API está inicializada antes de usarla
+export async function ensureInitialized() {
+  if (initPromise) {
+    await initPromise;
+    initPromise = null;
+  }
+}
 
 // Interceptor para agregar el token JWT a todas las peticiones
 api.interceptors.request.use(
   async (config) => {
     try {
+      // Asegurar que la API está inicializada antes de hacer cualquier petición
+      await ensureInitialized();
+
       // No agregar token en rutas de autenticación
       const authRoutes = ['/auth/login', '/auth/register-organization'];
       const isAuthRoute = authRoutes.some(route => config.url?.includes(route));

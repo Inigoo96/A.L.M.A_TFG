@@ -32,7 +32,6 @@ class AuthService {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       console.log('Intentando login con email:', email);
-      console.log('URL completa:', 'http://localhost:8080/api/auth/login');
 
       // Asegurarnos de que el objeto de la petición coincide exactamente con lo que espera el backend
       const loginData = {
