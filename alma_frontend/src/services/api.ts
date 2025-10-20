@@ -1,9 +1,12 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Config from 'react-native-config';
 
-// Para dispositivo físico con adb reverse, usar localhost
-const API_BASE_URL = 'http://localhost:8080/api';
+// Configuración para dispositivo físico Android
+// IMPORTANTE: La IP se configura en el archivo .env
+// Para cambiar la IP: edita el archivo .env y recarga la app (presiona 'r' dos veces en Metro)
+// Para obtener tu IP actual ejecuta: ipconfig (busca IPv4 del adaptador Wi-Fi)
+const API_BASE_URL = Config.API_BASE_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
