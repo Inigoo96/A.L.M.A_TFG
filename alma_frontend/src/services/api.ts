@@ -1,21 +1,30 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Config from 'react-native-config';
+import { detectBackendURL } from './apiConfig';
 
-// Configuración para dispositivo físico Android
-// IMPORTANTE: La IP se configura en el archivo .env
-// Para cambiar la IP: edita el archivo .env y recarga la app (presiona 'r' dos veces en Metro)
-// Para obtener tu IP actual ejecuta: ipconfig (busca IPv4 del adaptador Wi-Fi)
-const API_BASE_URL = Config.API_BASE_URL || 'http://localhost:8080/api';
-
+// Instancia de Axios que se configurará dinámicamente
 const api = axios.create({
-  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
   timeout: 10000, // 10 segundos de timeout
 });
+
+// Inicializar la detección automática de la URL del backend
+let isInitialized = false;
+
+async function initializeAPI() {
+  if (!isInitialized) {
+    const baseURL = await detectBackendURL();
+    api.defaults.baseURL = baseURL;
+    console.log('📡 API inicializada con URL:', baseURL);
+    isInitialized = true;
+  }
+}
+
+// Inicializar inmediatamente
+initializeAPI();
 
 // Interceptor para agregar el token JWT a todas las peticiones
 api.interceptors.request.use(
