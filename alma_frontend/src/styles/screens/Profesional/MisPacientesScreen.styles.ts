@@ -1,0 +1,200 @@
+import {StyleSheet} from 'react-native';
+import {colors, fontSize, spacing, borderRadius} from '../../../theme';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+  },
+  header: {
+    padding: spacing.lg,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    fontSize: fontSize.xxl,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    fontSize: fontSize.md,
+    color: colors.mediumGreen,
+  },
+  searchContainer: {
+    padding: spacing.md,
+    backgroundColor: colors.white,
+  },
+  searchInput: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  filterButton: {
+    flex: 1,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  filterButtonTextActive: {
+    color: colors.white,
+  },
+  refreshButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refreshButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  cardInactive: {
+    opacity: 0.6,
+    borderLeftColor: colors.textSecondary,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  pacienteNombre: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.darkGreen,
+    flex: 1,
+  },
+  inactiveBadge: {
+    backgroundColor: colors.textSecondary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  inactiveBadgeText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: 'bold',
+  },
+  edadBadge: {
+    backgroundColor: colors.secondary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  edadText: {
+    color: colors.darkGreen,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+  },
+  cardBody: {
+    marginBottom: spacing.md,
+  },
+  infoRow: {
+    marginBottom: spacing.sm,
+  },
+  infoLabel: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  infoValue: {
+    fontSize: fontSize.md,
+    color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+  },
+  footerText: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+    marginTop: spacing.xxl,
+  },
+  emptyTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  emptyText: {
+    fontSize: fontSize.md,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+});

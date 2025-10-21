@@ -16,20 +16,25 @@ import {
 } from 'react-native';
 import authService from '../../services/authService';
 import {colors, fontSize, spacing, borderRadius} from '../../theme';
+import {isValidDNI, isValidCIF} from '../../utils/validation';
 
 const RegisterOrganizationScreen = ({navigation}: any) => {
   const [nombreOrganizacion, setNombreOrganizacion] = useState('');
   const [nombreOrganizacionFocused, setNombreOrganizacionFocused] = useState(false);
   const [nombreOrganizacionError, setNombreOrganizacionError] = useState('');
-  
+
   const [cif, setCif] = useState('');
   const [cifFocused, setCifFocused] = useState(false);
   const [cifError, setCifError] = useState('');
-  
+
+  const [dniAdmin, setDniAdmin] = useState('');
+  const [dniAdminFocused, setDniAdminFocused] = useState(false);
+  const [dniAdminError, setDniAdminError] = useState('');
+
   const [nombre, setNombre] = useState('');
   const [nombreFocused, setNombreFocused] = useState(false);
   const [nombreError, setNombreError] = useState('');
-  
+
   const [apellidos, setApellidos] = useState('');
   const [apellidosFocused, setApellidosFocused] = useState(false);
   const [apellidosError, setApellidosError] = useState('');
@@ -60,11 +65,6 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
   
   // Animación para el botón
   const buttonScale = React.useRef(new Animated.Value(1)).current;
-
-  const validateCIF = (cif: string): boolean => {
-    const cifRegex = /^[A-Z][0-9]{8}$/;
-    return cifRegex.test(cif.toUpperCase());
-  };
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,6 +103,13 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
     setCif(text);
     if (cifError && text.trim()) {
       setCifError('');
+    }
+  };
+
+  const handleDniAdminChange = (text: string) => {
+    setDniAdmin(text);
+    if (dniAdminError && text.trim()) {
+      setDniAdminError('');
     }
   };
 
@@ -163,6 +170,7 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
     // Limpiar errores previos
     setNombreOrganizacionError('');
     setCifError('');
+    setDniAdminError('');
     setNombreError('');
     setApellidosError('');
     setEmailError('');
@@ -181,8 +189,17 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
     if (!cif.trim()) {
       setCifError('El CIF es obligatorio');
       hasErrors = true;
-    } else if (!validateCIF(cif)) {
-      setCifError('El CIF debe tener el formato correcto (ej: A12345678)');
+    } else if (!isValidCIF(cif)) {
+      setCifError('El CIF no es válido');
+      hasErrors = true;
+    }
+
+    // Validar DNI del administrador
+    if (!dniAdmin.trim()) {
+      setDniAdminError('El DNI/NIE del administrador es obligatorio');
+      hasErrors = true;
+    } else if (!isValidDNI(dniAdmin)) {
+      setDniAdminError('El DNI/NIE no es válido');
       hasErrors = true;
     }
 
@@ -233,12 +250,20 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
 
     try {
       await authService.registerOrganization({
-        nombreOrganizacion: nombreOrganizacion.trim(),
+        // Datos de la organización
+        nombreOficial: nombreOrganizacion.trim(),
         cif: cif.toUpperCase().trim(),
-        nombre: nombre.trim(),
-        apellidos: apellidos.trim(),
-        email: email.trim(),
-        password,
+        emailCorporativo: email.trim(),
+
+        // Datos del administrador (anidados)
+        administrador: {
+          dni: dniAdmin.toUpperCase().trim(),
+          nombre: nombre.trim(),
+          apellidos: apellidos.trim(),
+          email: email.trim(),
+          cargo: 'Administrador',
+          password,
+        },
       });
 
       Alert.alert(
@@ -341,6 +366,38 @@ const RegisterOrganizationScreen = ({navigation}: any) => {
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>Datos del Administrador</Text>
             <View style={styles.dividerLine} />
+          </View>
+
+          {/* DNI Admin Input */}
+          <View style={styles.inputSection}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>
+                DNI/NIE del administrador <Text style={{color: '#e74c3c'}}>*</Text>
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.inputContainer,
+                dniAdminFocused && styles.inputContainerFocused,
+                dniAdminError && styles.inputContainerError,
+              ]}>
+              <Text style={styles.inputIcon}>🆔</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="12345678A"
+                value={dniAdmin}
+                onChangeText={handleDniAdminChange}
+                onFocus={() => setDniAdminFocused(true)}
+                onBlur={() => setDniAdminFocused(false)}
+                autoCapitalize="characters"
+                maxLength={9}
+                editable={!loading}
+                placeholderTextColor={colors.mediumGreen}
+              />
+            </View>
+            {dniAdminError ? (
+              <Text style={styles.errorText}>{dniAdminError}</Text>
+            ) : null}
           </View>
 
           {/* Nombre Admin Input */}

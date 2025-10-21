@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   Alert,
   ActivityIndicator,
   ScrollView,
@@ -11,7 +10,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
-import {colors, fontSize, spacing, borderRadius} from '../theme';
+import {colors} from '../theme';
+import {RoleGuard} from '../components/RoleGuard';
+import {TipoUsuario} from '../types/api.types';
+import {styles} from '../styles/screens/DashboardScreen.styles';
 
 const DashboardScreen = ({navigation}: any) => {
   const [loading, setLoading] = useState(false);
@@ -163,15 +165,81 @@ const DashboardScreen = ({navigation}: any) => {
           </View>
         </View>
 
-        {/* Coming Soon Card */}
-        <View style={styles.comingSoonCard}>
-          <Text style={styles.comingSoonTitle}>Próximamente</Text>
-          <Text style={styles.comingSoonText}>
-            • Gestión de pacientes{'\n'}
-            • Recursos de apoyo{'\n'}
-            • Chat con profesionales{'\n'}
-            • Y mucho más...
-          </Text>
+        {/* Actions Card - Based on Role */}
+        <View style={styles.actionsCard}>
+          <Text style={styles.cardTitle}>Acciones Disponibles</Text>
+
+          {/* ADMIN_ORGANIZACION Actions */}
+          <RoleGuard allowedRoles={[TipoUsuario.ADMIN_ORGANIZACION]}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('RegisterProfesional')}>
+              <Text style={styles.actionButtonText}>➕ Registrar Profesional</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('RegisterPaciente')}>
+              <Text style={styles.actionButtonText}>➕ Registrar Paciente</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('GestionAsignaciones')}>
+              <Text style={styles.actionButtonText}>🔗 Gestionar Asignaciones</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => Alert.alert('Próximamente', 'Pantalla de gestión de usuarios')}>
+              <Text style={styles.actionButtonText}>👥 Ver Usuarios</Text>
+            </TouchableOpacity>
+          </RoleGuard>
+
+          {/* PROFESIONAL Actions */}
+          <RoleGuard allowedRoles={[TipoUsuario.PROFESIONAL]}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('MisPacientes')}>
+              <Text style={styles.actionButtonText}>👥 Mis Pacientes</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate('MisEstadisticas')}>
+              <Text style={styles.actionButtonText}>📊 Mis Estadísticas</Text>
+            </TouchableOpacity>
+          </RoleGuard>
+
+          {/* PACIENTE Actions */}
+          <RoleGuard allowedRoles={[TipoUsuario.PACIENTE]}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => Alert.alert('Próximamente', 'Pantalla de mis profesionales')}>
+              <Text style={styles.actionButtonText}>👨‍⚕️ Mis Profesionales</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => Alert.alert('Próximamente', 'Pantalla de recursos')}>
+              <Text style={styles.actionButtonText}>📚 Recursos de Apoyo</Text>
+            </TouchableOpacity>
+          </RoleGuard>
+
+          {/* SUPER_ADMIN Actions */}
+          <RoleGuard allowedRoles={[TipoUsuario.SUPER_ADMIN]}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => Alert.alert('Próximamente', 'Pantalla de organizaciones')}>
+              <Text style={styles.actionButtonText}>🏢 Gestionar Organizaciones</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => Alert.alert('Próximamente', 'Pantalla de estadísticas globales')}>
+              <Text style={styles.actionButtonText}>📊 Estadísticas Globales</Text>
+            </TouchableOpacity>
+          </RoleGuard>
         </View>
 
         {/* Change Password Button (if temporary) */}
@@ -200,167 +268,5 @@ const DashboardScreen = ({navigation}: any) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-    marginTop: spacing.lg,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: spacing.md,
-  },
-  title: {
-    fontSize: fontSize.xxxl,
-    fontWeight: 'bold',
-    color: colors.darkGreen,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: fontSize.lg,
-    color: colors.mediumGreen,
-  },
-  welcomeCard: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  welcomeTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  welcomeText: {
-    fontSize: fontSize.md,
-    color: colors.white,
-    lineHeight: 22,
-    opacity: 0.95,
-  },
-  infoCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  cardTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.darkGreen,
-    marginBottom: spacing.lg,
-  },
-  infoRow: {
-    marginBottom: spacing.md,
-  },
-  infoLabel: {
-    fontSize: fontSize.sm,
-    color: colors.mediumGreen,
-    marginBottom: spacing.xs,
-  },
-  infoValue: {
-    fontSize: fontSize.md,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
-  },
-  roleBadge: {
-    backgroundColor: colors.secondary,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    alignSelf: 'flex-start',
-  },
-  roleBadgeText: {
-    fontSize: fontSize.sm,
-    color: colors.darkGreen,
-    fontWeight: '600',
-  },
-  comingSoonCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
-    marginBottom: spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.secondary,
-  },
-  comingSoonTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.darkGreen,
-    marginBottom: spacing.md,
-  },
-  comingSoonText: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  logoutButton: {
-    backgroundColor: colors.error,
-    padding: spacing.md,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    shadowColor: colors.shadowMedium,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  logoutButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-  },
-  changePasswordButton: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    shadowColor: colors.primary,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  changePasswordButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-  },
-});
 
 export default DashboardScreen;

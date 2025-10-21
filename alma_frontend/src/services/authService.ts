@@ -1,32 +1,11 @@
 import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  email: string;
-  role: string;
-  token_type: string;
-  password_temporal: boolean;
-}
-
-export interface UpdatePasswordRequest {
-  oldPassword: string;
-  newPassword: string;
-}
-
-export interface RegisterOrganizationRequest {
-  nombreOrganizacion: string;
-  cif: string;
-  nombre: string;
-  apellidos: string;
-  email: string;
-  password: string;
-}
+import {
+  LoginRequest,
+  LoginResponse,
+  UpdatePasswordRequest,
+  RegisterOrganizationRequest,
+} from '../types/api.types';
 
 class AuthService {
   async login(email: string, password: string): Promise<LoginResponse> {
@@ -127,9 +106,9 @@ class AuthService {
 
   async registerOrganization(data: RegisterOrganizationRequest): Promise<LoginResponse> {
     try {
-      console.log('Registrando organización:', data.nombreOrganizacion);
+      console.log('Registrando organización:', data.nombreOficial);
 
-      const response = await api.post<LoginResponse>('/auth/register-organization', data);
+      const response = await api.post<LoginResponse>('/auth/register/organization', data);
 
       console.log('Organización registrada exitosamente:', response.data);
 

@@ -1,51 +1,58 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { detectBackendURL } from './apiConfig';
+import {getBaseURL, testBackendConnection, logConnectionInfo} from './apiConfig';
 
-// Instancia de Axios que se configurará dinámicamente
+// ============================================
+// CONFIGURACIÓN DE AXIOS
+// ============================================
+
 const api = axios.create({
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    Accept: 'application/json',
   },
-  timeout: 10000, // 10 segundos de timeout
+  timeout: 10000, // 10 segundos
 });
 
-// Inicializar la detección automática de la URL del backend
-let isInitialized = false;
-let initPromise: Promise<void> | null = null;
+// ============================================
+// TEST DE CONEXIÓN AL INICIAR
+// ============================================
 
-async function initializeAPI() {
-  if (!isInitialized) {
-    const baseURL = await detectBackendURL();
-    api.defaults.baseURL = baseURL;
-    console.log('📡 API inicializada con URL:', baseURL);
-    isInitialized = true;
+let connectionTested = false;
+
+async function testInitialConnection() {
+  if (!connectionTested) {
+    logConnectionInfo();
+
+    const result = await testBackendConnection();
+
+    if (result.success) {
+      console.log('✅ Backend disponible:', result.url);
+    } else {
+      console.error('❌ Backend NO disponible:', result.message);
+      console.error('URL intentada:', result.url);
+    }
+
+    connectionTested = true;
   }
 }
 
-// Inicializar inmediatamente y guardar la promesa
-initPromise = initializeAPI();
+// Probar conexión al iniciar
+testInitialConnection();
 
-// Función para asegurar que la API está inicializada antes de usarla
-export async function ensureInitialized() {
-  if (initPromise) {
-    await initPromise;
-    initPromise = null;
-  }
-}
+// ============================================
+// INTERCEPTOR DE REQUEST
+// ============================================
 
-// Interceptor para agregar el token JWT a todas las peticiones
 api.interceptors.request.use(
-  async (config) => {
+  async config => {
     try {
-      // Asegurar que la API está inicializada antes de hacer cualquier petición
-      await ensureInitialized();
-
-      // No agregar token en rutas de autenticación
-      const authRoutes = ['/auth/login', '/auth/register-organization'];
+      // Rutas que NO necesitan token
+      const authRoutes = ['/auth/login', '/auth/register/organization'];
       const isAuthRoute = authRoutes.some(route => config.url?.includes(route));
 
+      // Agregar token si no es ruta de autenticación
       if (!isAuthRoute) {
         const token = await AsyncStorage.getItem('jwt_token');
         if (token) {
@@ -53,44 +60,114 @@ api.interceptors.request.use(
         }
       }
 
-      // Log de la petición para debugging
-      console.log('========= REQUEST =========');
-      console.log('URL:', (config.baseURL || '') + (config.url || ''));
-      console.log('Method:', config.method);
-      console.log('Headers:', JSON.stringify(config.headers, null, 2));
-      console.log('Data:', JSON.stringify(config.data, null, 2));
-      console.log('===========================');
+      // Log de petición (solo en desarrollo)
+      if (__DEV__) {
+        console.log('\n📤 REQUEST:', config.method?.toUpperCase(), config.url);
+        if (config.data) {
+          console.log('📦 Data:', JSON.stringify(config.data, null, 2));
+        }
+      }
 
       return config;
     } catch (error) {
-      console.error('Error en el interceptor:', error);
+      console.error('❌ Error en interceptor de request:', error);
       return config;
     }
   },
-  (error) => {
+  error => {
+    console.error('❌ Error antes de enviar request:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
-// Interceptor para manejar las respuestas y errores
+// ============================================
+// INTERCEPTOR DE RESPONSE
+// ============================================
+
 api.interceptors.response.use(
-  (response) => {
-    console.log('========= RESPONSE =========');
-    console.log('Status:', response.status);
-    console.log('Data:', JSON.stringify(response.data, null, 2));
-    console.log('============================');
+  response => {
+    // Log de respuesta exitosa (solo en desarrollo)
+    if (__DEV__) {
+      console.log('✅ RESPONSE:', response.status, response.config.url);
+    }
     return response;
   },
-  (error) => {
-    console.error('========= ERROR RESPONSE =========');
-    console.error('Status:', error.response?.status);
-    console.error('Error Data:', JSON.stringify(error.response?.data, null, 2));
-    console.error('Error Message:', error.message);
-    console.error('Request URL:', error.config?.url);
-    console.error('Request Data:', JSON.stringify(error.config?.data, null, 2));
-    console.error('==================================');
+  async error => {
+    // Extraer información del error
+    const status = error.response?.status;
+    const url = error.config?.url;
+    const method = error.config?.method?.toUpperCase();
+    const errorMessage = error.response?.data?.message || error.message;
+
+    // Log detallado del error
+    console.error('\n❌ ERROR en petición API');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('URL:', method, url);
+    console.error('Status:', status || 'SIN RESPUESTA');
+    console.error('Mensaje:', errorMessage);
+
+    if (!status) {
+      console.error('');
+      console.error('⚠️ PROBLEMA DE RED:');
+      console.error('  • El backend no está respondiendo');
+      console.error('  • Verifica que esté corriendo en el puerto 8080');
+      console.error('  • Verifica la IP en apiConfig.ts');
+      console.error('  • Verifica tu conexión de red');
+    }
+
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // Manejo específico de errores por código
+    switch (status) {
+      case 400:
+        console.warn('🔴 Datos inválidos o parámetros incorrectos');
+        break;
+
+      case 401:
+        console.warn('🔒 Token inválido o expirado. Limpiando sesión...');
+        try {
+          await AsyncStorage.multiRemove([
+            'jwt_token',
+            'user_email',
+            'user_type',
+            'password_temporal',
+          ]);
+        } catch (storageError) {
+          console.error('Error al limpiar sesión:', storageError);
+        }
+        break;
+
+      case 403:
+        console.warn('🚫 Acceso denegado - Permisos insuficientes');
+        break;
+
+      case 404:
+        console.warn('🔍 Recurso no encontrado');
+        break;
+
+      case 409:
+        console.warn('⚠️ Conflicto - Recurso duplicado');
+        break;
+
+      case 500:
+        console.error('💥 Error interno del servidor');
+        break;
+
+      default:
+        if (!status) {
+          console.error('🌐 Error de red - Backend no alcanzable');
+        }
+    }
+
     return Promise.reject(error);
-  }
+  },
 );
 
+// ============================================
+// EXPORTAR API
+// ============================================
+
 export default api;
+
+// Exportar funciones útiles
+export {testBackendConnection, logConnectionInfo};
