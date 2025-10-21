@@ -61,7 +61,7 @@ public class AuthenticationController {
     @Transactional
     public ResponseEntity<?> registerOrganization(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            if (organizacionRepository.existsByCif(registerRequest.getCif())) {
+            if (organizacionRepository.findByCif(registerRequest.getCif()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El CIF de la organización ya está registrado"));
             }
             if (usuarioService.existsByEmail(registerRequest.getEmail())) {
@@ -69,7 +69,7 @@ public class AuthenticationController {
             }
 
             Organizacion newOrganizacion = new Organizacion();
-            newOrganizacion.setNombreOrganizacion(registerRequest.getNombreOrganizacion());
+            newOrganizacion.setNombreOficial(registerRequest.getNombreOrganizacion());
             newOrganizacion.setCif(registerRequest.getCif());
             Organizacion savedOrganizacion = organizacionRepository.save(newOrganizacion);
 
@@ -84,7 +84,7 @@ public class AuthenticationController {
 
             Usuario savedUser = usuarioService.save(newUser);
 
-            logger.info("Organización '{}' y administrador '{}' registrados exitosamente", savedOrganizacion.getNombreOrganizacion(), savedUser.getEmail());
+            logger.info("Organización '{}' y administrador '{}' registrados exitosamente", savedOrganizacion.getNombreOficial(), savedUser.getEmail());
 
             final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
             final String jwt = jwtUtil.generateToken(userDetails);

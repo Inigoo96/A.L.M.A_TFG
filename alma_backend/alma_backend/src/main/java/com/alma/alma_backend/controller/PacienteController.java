@@ -1,5 +1,6 @@
 package com.alma.alma_backend.controller;
 
+import com.alma.alma_backend.dto.PacienteResponseDTO;
 import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pacientes")
@@ -37,81 +39,87 @@ public class PacienteController {
     private AsignacionProfesionalPacienteRepository asignacionRepository;
 
     @PostMapping
-    public ResponseEntity<Paciente> createPaciente(@RequestBody Paciente paciente) {
-        return ResponseEntity.ok(pacienteService.save(paciente));
+    public ResponseEntity<PacienteResponseDTO> createPaciente(@RequestBody Paciente paciente) {
+        Paciente savedPaciente = pacienteService.save(paciente);
+        return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(savedPaciente));
     }
 
     @GetMapping
-    public ResponseEntity<List<Paciente>> getAllPacientes(Authentication authentication) {
+    public ResponseEntity<List<PacienteResponseDTO>> getAllPacientes(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
+        Integer userOrgId = currentUser.getOrganizacion().getId();
 
         List<Paciente> pacientesDeLaOrganizacion = pacienteService.findByOrganizacionId(userOrgId);
 
-        return ResponseEntity.ok(pacientesDeLaOrganizacion);
+        // Convertir las entidades a DTOs seguros
+        List<PacienteResponseDTO> pacientesDTO = pacientesDeLaOrganizacion.stream()
+                .map(PacienteResponseDTO::fromPaciente)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(pacientesDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Paciente> getPacienteById(@PathVariable Integer id, Authentication authentication) {
+    public ResponseEntity<PacienteResponseDTO> getPacienteById(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
+        Integer userOrgId = currentUser.getOrganizacion().getId();
 
         return pacienteService.findById(id)
                 .map(paciente -> {
-                    if (!Objects.equals(paciente.getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId)) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build();
+                    if (!Objects.equals(paciente.getUsuario().getOrganizacion().getId(), userOrgId)) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                     }
 
                     if (currentUser.getTipoUsuario() == TipoUsuario.ADMIN_ORGANIZACION || currentUser.getTipoUsuario() == TipoUsuario.SUPER_ADMIN) {
-                        return ResponseEntity.ok(paciente);
+                        return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente));
                     }
 
                     if (currentUser.getTipoUsuario() == TipoUsuario.PROFESIONAL) {
-                        return profesionalRepository.findByUsuario(currentUser).flatMap(profesional -> {
-                            if (asignacionRepository.existeAsignacionActiva(profesional.getIdProfesional(), paciente.getIdPaciente())) {
-                                return Optional.of(ResponseEntity.ok(paciente));
+                        return profesionalRepository.findByUsuario_Id(currentUser.getId()).flatMap(profesional -> {
+                            if (asignacionRepository.existeAsignacionActiva(profesional.getId(), paciente.getId())) {
+                                return Optional.of(ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente)));
                             }
-                            return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build());
-                        }).orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build());
+                            return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build());
+                        }).orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build());
                     }
 
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<Paciente> getPacienteByUsuarioId(@PathVariable Integer usuarioId, Authentication authentication) {
+    public ResponseEntity<PacienteResponseDTO> getPacienteByUsuarioId(@PathVariable Integer usuarioId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
+        Integer userOrgId = currentUser.getOrganizacion().getId();
 
         return pacienteService.findByUsuarioId(usuarioId)
                 .map(paciente -> {
-                    if (!Objects.equals(paciente.getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId)) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build();
+                    if (!Objects.equals(paciente.getUsuario().getOrganizacion().getId(), userOrgId)) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                     }
-                    return ResponseEntity.ok(paciente);
+                    return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente));
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado para el usuario con id: " + usuarioId));
     }
 
     // CORREGIDO: Se elimina el try-catch para dejar que el GlobalExceptionHandler actúe.
     @PutMapping("/{id}")
-    public ResponseEntity<Paciente> updatePaciente(@PathVariable Integer id, @RequestBody Paciente pacienteDetails, Authentication authentication) {
+    public ResponseEntity<PacienteResponseDTO> updatePaciente(@PathVariable Integer id, @RequestBody Paciente pacienteDetails, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
+        Integer userOrgId = currentUser.getOrganizacion().getId();
 
         return pacienteService.findById(id)
             .map(pacienteExistente -> {
-                if (!Objects.equals(pacienteExistente.getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId)) {
-                     return ResponseEntity.status(HttpStatus.FORBIDDEN).<Paciente>build();
+                if (!Objects.equals(pacienteExistente.getUsuario().getOrganizacion().getId(), userOrgId)) {
+                     return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                 }
                 Paciente updatedPaciente = pacienteService.updatePaciente(id, pacienteDetails);
-                return ResponseEntity.ok(updatedPaciente);
+                return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(updatedPaciente));
             })
             .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
     }
@@ -120,10 +128,10 @@ public class PacienteController {
     public ResponseEntity<Void> deletePaciente(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-        Integer userOrgId = currentUser.getOrganizacion().getIdOrganizacion();
+        Integer userOrgId = currentUser.getOrganizacion().getId();
 
         pacienteService.findById(id).ifPresent(paciente -> {
-            if (Objects.equals(paciente.getUsuario().getOrganizacion().getIdOrganizacion(), userOrgId)) {
+            if (Objects.equals(paciente.getUsuario().getOrganizacion().getId(), userOrgId)) {
                 pacienteService.deleteById(id);
             }
         });

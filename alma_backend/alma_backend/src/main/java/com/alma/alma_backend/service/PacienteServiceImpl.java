@@ -28,7 +28,7 @@ public class PacienteServiceImpl implements PacienteService {
 
     @Override
     public Optional<Paciente> findByUsuarioId(Integer usuarioId) {
-        return pacienteRepository.findByUsuario_IdUsuario(usuarioId);
+        return pacienteRepository.findByUsuario_Id(usuarioId);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class PacienteServiceImpl implements PacienteService {
 
     @Override
     public List<Paciente> findByOrganizacionId(Integer organizacionId) {
-        return pacienteRepository.findByUsuario_Organizacion_IdOrganizacion(organizacionId);
+        return pacienteRepository.findByUsuario_Organizacion_Id(organizacionId);
     }
 
     @Override
@@ -51,12 +51,14 @@ public class PacienteServiceImpl implements PacienteService {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
 
-        // La lógica de actualización solo debe modificar los campos propios del perfil de Paciente.
         if (pacienteDetails.getFechaNacimiento() != null) {
             paciente.setFechaNacimiento(pacienteDetails.getFechaNacimiento());
         }
         if (pacienteDetails.getGenero() != null) {
             paciente.setGenero(pacienteDetails.getGenero());
+        }
+        if (pacienteDetails.getTarjetaSanitaria() != null && !pacienteDetails.getTarjetaSanitaria().isEmpty()) {
+            paciente.setTarjetaSanitaria(pacienteDetails.getTarjetaSanitaria());
         }
 
         return pacienteRepository.save(paciente);

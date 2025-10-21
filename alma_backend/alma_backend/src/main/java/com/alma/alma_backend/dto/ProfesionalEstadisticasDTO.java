@@ -1,6 +1,5 @@
 package com.alma.alma_backend.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +11,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ProfesionalEstadisticasDTO {
 
     // Datos del Profesional
@@ -33,7 +31,51 @@ public class ProfesionalEstadisticasDTO {
     private String nombreOrganizacion;
 
     /**
-     * Constructor para proyecciones JPA.
+     * Constructor simplificado para queries JPQL en ProfesionalRepository.
+     * Usado por las queries de estadísticas que solo incluyen datos básicos.
+     *
+     * @param idProfesional ID del profesional
+     * @param nombre Nombre del profesional
+     * @param apellidos Apellidos del profesional
+     * @param especialidad Especialidad del profesional
+     * @param totalPacientesAsignados Total de pacientes asignados
+     * @param pacientesActivos Número de pacientes activos
+     */
+    public ProfesionalEstadisticasDTO(Integer idProfesional, String nombre, String apellidos,
+                                      String especialidad, Long totalPacientesAsignados, Long pacientesActivos) {
+        this.idProfesional = idProfesional;
+        this.nombreCompleto = (nombre != null ? nombre : "") +
+                             (apellidos != null ? " " + apellidos : "");
+        this.especialidad = especialidad;
+        this.totalPacientesAsignados = totalPacientesAsignados != null ? totalPacientesAsignados : 0L;
+        this.pacientesActivos = pacientesActivos != null ? pacientesActivos : 0L;
+        this.pacientesInactivos = 0L;
+        this.asignacionesPrincipales = 0L;
+    }
+
+    /**
+     * Constructor completo para proyecciones JPA con todos los campos.
+     */
+    public ProfesionalEstadisticasDTO(Integer idProfesional, String nombreCompleto,
+                                      String email, String numeroColegiado, String especialidad,
+                                      Long totalPacientesAsignados, Long pacientesActivos,
+                                      Long pacientesInactivos, Long asignacionesPrincipales,
+                                      Integer idOrganizacion, String nombreOrganizacion) {
+        this.idProfesional = idProfesional;
+        this.nombreCompleto = nombreCompleto;
+        this.email = email;
+        this.numeroColegiado = numeroColegiado;
+        this.especialidad = especialidad;
+        this.totalPacientesAsignados = totalPacientesAsignados != null ? totalPacientesAsignados : 0L;
+        this.pacientesActivos = pacientesActivos != null ? pacientesActivos : 0L;
+        this.pacientesInactivos = pacientesInactivos != null ? pacientesInactivos : 0L;
+        this.asignacionesPrincipales = asignacionesPrincipales != null ? asignacionesPrincipales : 0L;
+        this.idOrganizacion = idOrganizacion;
+        this.nombreOrganizacion = nombreOrganizacion;
+    }
+
+    /**
+     * Constructor alternativo para proyecciones JPA (separa nombre y apellidos).
      */
     public ProfesionalEstadisticasDTO(Integer idProfesional, String nombre, String apellidos,
                                       String email, String numeroColegiado, String especialidad,

@@ -50,11 +50,13 @@ public class OrganizacionServiceImpl implements OrganizacionService {
         Organizacion organizacion = organizacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Organizacion no encontrada con id: " + id));
 
-        organizacion.setNombreOrganizacion(organizacionDetails.getNombreOrganizacion());
+        organizacion.setNombreOficial(organizacionDetails.getNombreOficial());
         organizacion.setCif(organizacionDetails.getCif());
-        organizacion.setEmailContacto(organizacionDetails.getEmailContacto());
+        organizacion.setEmailCorporativo(organizacionDetails.getEmailCorporativo());
         organizacion.setTelefonoContacto(organizacionDetails.getTelefonoContacto());
-        organizacion.setActiva(organizacionDetails.getActiva());
+        organizacion.setDireccion(organizacionDetails.getDireccion());
+        organizacion.setCodigoRegcess(organizacionDetails.getCodigoRegcess());
+        organizacion.setNumeroSeguridadSocial(organizacionDetails.getNumeroSeguridadSocial());
 
         return organizacionRepository.save(organizacion);
     }

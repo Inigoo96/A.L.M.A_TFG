@@ -58,7 +58,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado con email: " + userEmail));
 
-        Profesional profesional = profesionalRepository.findByUsuario(usuario)
+        Profesional profesional = profesionalRepository.findByUsuario_Id(usuario.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Perfil de profesional no encontrado para el usuario: " + userEmail));
 
         logger.info("El profesional '{}' está consultando su lista de pacientes.", userEmail);
@@ -89,13 +89,13 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado con email: " + userEmail));
 
-        Profesional profesional = profesionalRepository.findByUsuario(usuario)
+        Profesional profesional = profesionalRepository.findByUsuario_Id(usuario.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Perfil de profesional no encontrado para el usuario: " + userEmail));
 
         logger.info("El profesional '{}' está consultando su lista de pacientes (soloActivos: {})", userEmail, soloActivos);
 
         List<PacienteDetalleDTO> pacientes = pacienteService.findPacientesByProfesional(
-            profesional.getIdProfesional(), soloActivos);
+            profesional.getId(), soloActivos);
 
         return ResponseEntity.ok(pacientes);
     }
@@ -112,12 +112,12 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado con email: " + userEmail));
 
-        Profesional profesional = profesionalRepository.findByUsuario(usuario)
+        Profesional profesional = profesionalRepository.findByUsuario_Id(usuario.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Perfil de profesional no encontrado para el usuario: " + userEmail));
 
         logger.info("El profesional '{}' está consultando su perfil", userEmail);
 
-        return profesionalService.findDetalleById(profesional.getIdProfesional())
+        return profesionalService.findDetalleById(profesional.getId())
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
@@ -136,12 +136,12 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado con email: " + userEmail));
 
-        Profesional profesional = profesionalRepository.findByUsuario(usuario)
+        Profesional profesional = profesionalRepository.findByUsuario_Id(usuario.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Perfil de profesional no encontrado para el usuario: " + userEmail));
 
         logger.info("El profesional '{}' está consultando sus estadísticas", userEmail);
 
-        return profesionalService.findEstadisticasById(profesional.getIdProfesional())
+        return profesionalService.findEstadisticasById(profesional.getId())
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
@@ -167,7 +167,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        Integer idOrganizacion = usuario.getOrganizacion().getIdOrganizacion();
+        Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' consultando profesionales de organización ID: {} (soloActivos: {})",
                     userEmail, idOrganizacion, soloActivos);
@@ -197,7 +197,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        Integer idOrganizacion = usuario.getOrganizacion().getIdOrganizacion();
+        Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' consultando estadísticas de profesionales de organización ID: {}",
                     userEmail, idOrganizacion);
@@ -228,7 +228,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        Integer idOrganizacion = usuario.getOrganizacion().getIdOrganizacion();
+        Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' buscando profesionales por especialidad '{}' en organización ID: {}",
                     userEmail, especialidad, idOrganizacion);
@@ -259,7 +259,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        Integer idOrganizacion = usuario.getOrganizacion().getIdOrganizacion();
+        Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' consultando detalle del profesional ID: {}", userEmail, idProfesional);
 
@@ -295,7 +295,7 @@ public class ProfesionalController {
         Usuario usuario = usuarioService.findByEmail(userEmail)
             .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
 
-        Integer idOrganizacion = usuario.getOrganizacion().getIdOrganizacion();
+        Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' consultando estadísticas del profesional ID: {}", userEmail, idProfesional);
 

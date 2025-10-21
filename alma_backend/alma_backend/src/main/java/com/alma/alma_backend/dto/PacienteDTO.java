@@ -19,7 +19,7 @@ public class PacienteDTO {
 
     public static PacienteDTO fromPaciente(Paciente paciente) {
         PacienteDTO dto = new PacienteDTO();
-        dto.setId(paciente.getIdPaciente());
+        dto.setId(paciente.getId());
         dto.setNombre(paciente.getUsuario().getNombre());
         dto.setApellidos(paciente.getUsuario().getApellidos());
         dto.setEmail(paciente.getUsuario().getEmail());

@@ -1,28 +1,20 @@
 package com.alma.alma_backend.dto;
 
 import com.alma.alma_backend.entity.TipoUsuario;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * DTO que representa la información completa de un profesional,
- * incluyendo datos de usuario y organización sin problemas de lazy loading.
- *
- * Útil para respuestas de API que necesitan todos los datos del profesional
- * sin exponer información sensible como el password.
- */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class ProfesionalDetalleDTO {
 
     // Datos del perfil Profesional
     private Integer idProfesional;
     private String numeroColegiado;
     private String especialidad;
+    private String centroSalud;
 
     // Datos del Usuario
     private Integer idUsuario;
@@ -38,13 +30,44 @@ public class ProfesionalDetalleDTO {
     private Integer idOrganizacion;
     private String nombreOrganizacion;
     private String cifOrganizacion;
-    private Boolean organizacionActiva;
+
+    public ProfesionalDetalleDTO(Integer idProfesional, String nombre, String apellidos, String email,
+                                  String numeroColegiado, String especialidad, String centroSalud, Boolean activo) {
+        this.idProfesional = idProfesional;
+        this.nombre = nombre;
+        this.apellidos = apellidos;
+        this.email = email;
+        this.numeroColegiado = numeroColegiado;
+        this.especialidad = especialidad;
+        this.centroSalud = centroSalud;
+        this.activo = activo;
+    }
 
     /**
-     * Obtiene el nombre completo del profesional.
-     *
-     * @return Nombre completo (nombre + apellidos)
+     * Constructor completo para queries JPQL que traen todos los datos.
      */
+    public ProfesionalDetalleDTO(
+            Integer idProfesional, String numeroColegiado, String especialidad, String centroSalud,
+            Integer idUsuario, String email, String nombre, String apellidos, TipoUsuario tipoUsuario,
+            Boolean activo, LocalDateTime fechaRegistro, LocalDateTime ultimoAcceso,
+            Integer idOrganizacion, String nombreOrganizacion, String cifOrganizacion) {
+        this.idProfesional = idProfesional;
+        this.numeroColegiado = numeroColegiado;
+        this.especialidad = especialidad;
+        this.centroSalud = centroSalud;
+        this.idUsuario = idUsuario;
+        this.email = email;
+        this.nombre = nombre;
+        this.apellidos = apellidos;
+        this.tipoUsuario = tipoUsuario;
+        this.activo = activo;
+        this.fechaRegistro = fechaRegistro;
+        this.ultimoAcceso = ultimoAcceso;
+        this.idOrganizacion = idOrganizacion;
+        this.nombreOrganizacion = nombreOrganizacion;
+        this.cifOrganizacion = cifOrganizacion;
+    }
+
     public String getNombreCompleto() {
         return (nombre != null ? nombre : "") +
                (apellidos != null ? " " + apellidos : "");

@@ -14,8 +14,8 @@ import java.util.Optional;
 public interface AsignacionProfesionalPacienteRepository extends JpaRepository<AsignacionProfesionalPaciente, Integer> {
 
     // Métodos de búsqueda simples (potencialmente inseguros si no se usan con cuidado)
-    List<AsignacionProfesionalPaciente> findByPaciente_IdPaciente(Integer idPaciente);
-    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesional(Integer idProfesional);
+    List<AsignacionProfesionalPaciente> findByPaciente_Id(Integer idPaciente);
+    List<AsignacionProfesionalPaciente> findByProfesional_Id(Integer idProfesional);
 
     // --- MÉTODOS OPTIMIZADOS Y SEGUROS ---
 
@@ -25,7 +25,7 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
      * @param idOrganizacion ID de la organización
      * @return Lista de asignaciones
      */
-    List<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndPaciente_Usuario_Organizacion_IdOrganizacion(Integer idPaciente, Integer idOrganizacion);
+    List<AsignacionProfesionalPaciente> findByPaciente_IdAndPaciente_Usuario_Organizacion_Id(Integer idPaciente, Integer idOrganizacion);
 
     /**
      * Busca las asignaciones de un profesional, asegurando que pertenezca a la organización especificada.
@@ -33,21 +33,21 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
      * @param idOrganizacion ID de la organización
      * @return Lista de asignaciones
      */
-    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesionalAndProfesional_Usuario_Organizacion_IdOrganizacion(Integer idProfesional, Integer idOrganizacion);
+    List<AsignacionProfesionalPaciente> findByProfesional_IdAndProfesional_Usuario_Organizacion_Id(Integer idProfesional, Integer idOrganizacion);
 
 
     // --- Otros métodos existentes ---
 
-    List<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndActivoTrue(Integer idPaciente);
-    List<AsignacionProfesionalPaciente> findByProfesional_IdProfesionalAndActivoTrue(Integer idProfesional);
-    Optional<AsignacionProfesionalPaciente> findByPaciente_IdPacienteAndEsPrincipalTrueAndActivoTrue(Integer idPaciente);
+    List<AsignacionProfesionalPaciente> findByPaciente_IdAndActivoTrue(Integer idPaciente);
+    List<AsignacionProfesionalPaciente> findByProfesional_IdAndActivoTrue(Integer idProfesional);
+    Optional<AsignacionProfesionalPaciente> findByPaciente_IdAndEsPrincipalTrueAndActivoTrue(Integer idPaciente);
 
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
-           "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
+           "prof.id, uProf.nombre, uProf.apellidos, uProf.email, " +
            "prof.numeroColegiado, prof.especialidad, " +
-           "pac.idPaciente, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
-           "o.idOrganizacion, o.nombreOrganizacion) " +
+           "pac.id, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
+           "o.id, o.nombreOficial) " +
            "FROM AsignacionProfesionalPaciente a " +
            "JOIN a.profesional prof " +
            "JOIN prof.usuario uProf " +
@@ -59,17 +59,17 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
 
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
-           "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
+           "prof.id, uProf.nombre, uProf.apellidos, uProf.email, " +
            "prof.numeroColegiado, prof.especialidad, " +
-           "pac.idPaciente, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
-           "o.idOrganizacion, o.nombreOrganizacion) " +
+           "pac.id, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
+           "o.id, o.nombreOficial) " +
            "FROM AsignacionProfesionalPaciente a " +
            "JOIN a.profesional prof " +
            "JOIN prof.usuario uProf " +
            "JOIN a.paciente pac " +
            "JOIN pac.usuario uPac " +
            "JOIN uProf.organizacion o " +
-           "WHERE prof.idProfesional = :idProfesional " +
+           "WHERE prof.id = :idProfesional " +
            "AND (:soloActivas = false OR a.activo = true) " +
            "ORDER BY a.esPrincipal DESC, a.fechaAsignacion DESC")
     List<AsignacionDetalleDTO> findDetalleByProfesional(
@@ -78,17 +78,17 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
 
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
-           "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
+           "prof.id, uProf.nombre, uProf.apellidos, uProf.email, " +
            "prof.numeroColegiado, prof.especialidad, " +
-           "pac.idPaciente, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
-           "o.idOrganizacion, o.nombreOrganizacion) " +
+           "pac.id, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
+           "o.id, o.nombreOficial) " +
            "FROM AsignacionProfesionalPaciente a " +
            "JOIN a.profesional prof " +
            "JOIN prof.usuario uProf " +
            "JOIN a.paciente pac " +
            "JOIN pac.usuario uPac " +
            "JOIN uProf.organizacion o " +
-           "WHERE pac.idPaciente = :idPaciente " +
+           "WHERE pac.id = :idPaciente " +
            "AND (:soloActivas = false OR a.activo = true) " +
            "ORDER BY a.esPrincipal DESC, a.fechaAsignacion DESC")
     List<AsignacionDetalleDTO> findDetalleByPaciente(
@@ -97,17 +97,17 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
 
     @Query("SELECT new com.alma.alma_backend.dto.AsignacionDetalleDTO(" +
            "a.idAsignacion, a.esPrincipal, a.fechaAsignacion, a.activo, " +
-           "prof.idProfesional, uProf.nombre, uProf.apellidos, uProf.email, " +
+           "prof.id, uProf.nombre, uProf.apellidos, uProf.email, " +
            "prof.numeroColegiado, prof.especialidad, " +
-           "pac.idPaciente, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
-           "o.idOrganizacion, o.nombreOrganizacion) " +
+           "pac.id, uPac.nombre, uPac.apellidos, uPac.email, pac.fechaNacimiento, " +
+           "o.id, o.nombreOficial) " +
            "FROM AsignacionProfesionalPaciente a " +
            "JOIN a.profesional prof " +
            "JOIN prof.usuario uProf " +
            "JOIN a.paciente pac " +
            "JOIN pac.usuario uPac " +
            "JOIN uProf.organizacion o " +
-           "WHERE o.idOrganizacion = :idOrganizacion " +
+           "WHERE o.id = :idOrganizacion " +
            "AND (:soloActivas = false OR a.activo = true) " +
            "ORDER BY a.fechaAsignacion DESC")
     List<AsignacionDetalleDTO> findDetalleByOrganizacion(
@@ -116,8 +116,8 @@ public interface AsignacionProfesionalPacienteRepository extends JpaRepository<A
 
     @Query("SELECT COUNT(a) > 0 " +
            "FROM AsignacionProfesionalPaciente a " +
-           "WHERE a.profesional.idProfesional = :idProfesional " +
-           "AND a.paciente.idPaciente = :idPaciente " +
+           "WHERE a.profesional.id = :idProfesional " +
+           "AND a.paciente.id = :idPaciente " +
            "AND a.activo = true")
     boolean existeAsignacionActiva(
             @Param("idProfesional") Integer idProfesional,

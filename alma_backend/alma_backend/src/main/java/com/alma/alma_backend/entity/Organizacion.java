@@ -1,14 +1,9 @@
 package com.alma.alma_backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "ORGANIZACION")
@@ -20,39 +15,42 @@ public class Organizacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_ORGANIZACION")
-    private Integer idOrganizacion;
-
-    @Column(name = "NOMBRE_ORGANIZACION", nullable = false, length = 150)
-    private String nombreOrganizacion;
+    private Integer id;
 
     @Column(name = "CIF", nullable = false, unique = true, length = 9)
     private String cif;
 
-    @Column(name = "EMAIL_CONTACTO", length = 100)
-    private String emailContacto;
+    @Column(name = "NUMERO_SEGURIDAD_SOCIAL", nullable = false, length = 20)
+    private String numeroSeguridadSocial;
 
-    @Column(name = "TELEFONO_CONTACTO", length = 15)
+    @Column(name = "NOMBRE_OFICIAL", nullable = false, length = 255)
+    private String nombreOficial;
+
+    @Column(name = "DIRECCION", nullable = false, length = 255)
+    private String direccion;
+
+    @Column(name = "CODIGO_REGCESS", nullable = false, length = 50)
+    private String codigoRegcess;
+
+    @Column(name = "EMAIL_CORPORATIVO", nullable = false, length = 100)
+    private String emailCorporativo;
+
+    @Column(name = "TELEFONO_CONTACTO", nullable = false, length = 20)
     private String telefonoContacto;
 
-    @Column(name = "ACTIVA")
-    @ColumnDefault("true")
-    private Boolean activa;
+    // --- Campos para verificación ---
 
-    @Column(name = "FECHA_ALTA", updatable = false)
-    @ColumnDefault("CURRENT_TIMESTAMP")
-    private LocalDateTime fechaAlta;
+    @Column(name = "DOCUMENTO_CIF_URL", length = 255)
+    private String documentoCifUrl;
 
-    @OneToMany(mappedBy = "organizacion", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<Usuario> usuarios;
+    @Column(name = "DOCUMENTO_SEGURIDAD_SOCIAL_URL", length = 255)
+    private String documentoSeguridadSocialUrl;
 
-    @PrePersist
-    protected void onCreate() {
-        if (fechaAlta == null) {
-            fechaAlta = LocalDateTime.now();
-        }
-        if (activa == null) {
-            activa = true;
-        }
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ESTADO_VERIFICACION", nullable = false, length = 30)
+    private EstadoVerificacion estadoVerificacion = EstadoVerificacion.PENDIENTE_VERIFICACION;
+
+    @Column(name = "MOTIVO_RECHAZO", length = 500)
+    private String motivoRechazo;
+
 }

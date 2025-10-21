@@ -28,7 +28,7 @@ public class ProfesionalServiceImpl implements ProfesionalService {
 
     @Override
     public Optional<Profesional> findByUsuarioId(Integer usuarioId) {
-        return profesionalRepository.findByUsuario_IdUsuario(usuarioId);
+        return profesionalRepository.findByUsuario_Id(usuarioId);
     }
 
     @Override

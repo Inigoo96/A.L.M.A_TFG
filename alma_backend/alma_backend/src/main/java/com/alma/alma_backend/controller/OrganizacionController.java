@@ -23,31 +23,41 @@ public class OrganizacionController {
     private OrganizacionService organizacionService;
 
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Organizacion> createOrganizacion(@RequestBody Organizacion organizacion) {
+        logger.info("Admin creando una nueva organización");
         return ResponseEntity.ok(organizacionService.save(organizacion));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     public ResponseEntity<List<Organizacion>> getAllOrganizaciones() {
+        logger.info("Solicitando todas las organizaciones");
         return ResponseEntity.ok(organizacionService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     public ResponseEntity<Organizacion> getOrganizacionById(@PathVariable Integer id) {
+        logger.info("Solicitando organización por ID: {}", id);
         return organizacionService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cif/{cif}")
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     public ResponseEntity<Organizacion> getOrganizacionByCif(@PathVariable String cif) {
+        logger.info("Solicitando organización por CIF: {}", cif);
         return organizacionService.findByCif(cif)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Organizacion> updateOrganizacion(@PathVariable Integer id, @RequestBody Organizacion organizacionDetails) {
+        logger.info("Admin actualizando organización ID: {}", id);
         try {
             return ResponseEntity.ok(organizacionService.updateOrganizacion(id, organizacionDetails));
         } catch (RuntimeException e) {
@@ -56,12 +66,13 @@ public class OrganizacionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> deleteOrganizacion(@PathVariable Integer id) {
+        logger.info("Admin eliminando organización ID: {}", id);
         organizacionService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    // CORREGIDO: Se elimina el bloque try-catch para permitir que Spring Security maneje las excepciones de acceso.
     @GetMapping("/estadisticas")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<OrganizacionEstadisticasDTO>> obtenerEstadisticasOrganizaciones() {
@@ -70,7 +81,6 @@ public class OrganizacionController {
         return ResponseEntity.ok(estadisticas);
     }
 
-    // CORREGIDO: Se elimina el bloque try-catch.
     @GetMapping("/{id}/estadisticas")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<OrganizacionEstadisticasDTO> obtenerEstadisticasPorOrganizacion(@PathVariable Integer id) {
@@ -83,7 +93,6 @@ public class OrganizacionController {
                 });
     }
 
-    // CORREGIDO: Se elimina el bloque try-catch.
     @GetMapping("/estadisticas/activas")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<OrganizacionEstadisticasDTO>> obtenerEstadisticasOrganizacionesActivas() {

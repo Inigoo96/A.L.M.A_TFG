@@ -46,7 +46,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public List<Usuario> findByOrganizacionId(Integer organizacionId) {
-        return usuarioRepository.findByOrganizacionIdOrganizacion(organizacionId);
+        // <-- BUG CORREGIDO: Se llama al método correcto del repositorio.
+        return usuarioRepository.findByOrganizacion_Id(organizacionId);
     }
 
     @Override
@@ -73,6 +74,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         if (usuarioDetails.getEmail() != null && !usuarioDetails.getEmail().isEmpty()) {
             usuario.setEmail(usuarioDetails.getEmail());
+        }
+        if (usuarioDetails.getTelefono() != null) {
+            usuario.setTelefono(usuarioDetails.getTelefono());
+        }
+        if (usuarioDetails.getDni() != null && !usuarioDetails.getDni().isEmpty()) {
+            usuario.setDni(usuarioDetails.getDni());
+        }
+        if (usuarioDetails.getCargo() != null) {
+            usuario.setCargo(usuarioDetails.getCargo());
+        }
+        if (usuarioDetails.getDocumentoCargoUrl() != null) {
+            usuario.setDocumentoCargoUrl(usuarioDetails.getDocumentoCargoUrl());
+        }
+        if (usuarioDetails.getUltimoAcceso() != null) {
+            usuario.setUltimoAcceso(usuarioDetails.getUltimoAcceso());
         }
         if (usuarioDetails.getActivo() != null) {
             usuario.setActivo(usuarioDetails.getActivo());

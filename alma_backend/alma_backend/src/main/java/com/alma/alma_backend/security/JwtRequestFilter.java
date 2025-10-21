@@ -124,8 +124,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
-        // No filtrar endpoints de autenticación y recursos públicos
-        return path.startsWith("/api/auth/") ||
+        // No filtrar solo endpoints de autenticación públicos y recursos públicos
+        return path.equals("/api/auth/login") ||
+               path.equals("/api/auth/register/organization") ||
                path.startsWith("/api/public/") ||
                path.equals("/actuator/health") ||
                path.startsWith("/swagger-ui") ||

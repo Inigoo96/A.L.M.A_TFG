@@ -13,134 +13,75 @@ import java.util.Optional;
 @Repository
 public interface PacienteRepository extends JpaRepository<Paciente, Integer> {
 
-    Optional<Paciente> findByUsuario_IdUsuario(Integer idUsuario);
-
-    List<Paciente> findByUsuario_Organizacion_IdOrganizacion(Integer idOrganizacion);
+    Optional<Paciente> findByUsuario_Id(Integer idUsuario);
 
     /**
-     * Obtiene el detalle completo de un paciente con información de usuario y organización
-     * en una sola query, evitando problemas de lazy loading.
-     *
-     * @param idPaciente ID del paciente
-     * @return Optional con el DTO completo del paciente
+     * Alias para compatibilidad con código existente.
      */
+    default Optional<Paciente> findByUsuario_IdUsuario(Integer idUsuario) {
+        return findByUsuario_Id(idUsuario);
+    }
+
+    /**
+     * Busca pacientes por organización usando la navegación de relaciones.
+     */
+    List<Paciente> findByUsuario_Organizacion_Id(Integer organizacionId);
+
+    /**
+     * Alias para compatibilidad con código existente.
+     */
+    default List<Paciente> findByUsuario_Organizacion_IdOrganizacion(Integer organizacionId) {
+        return findByUsuario_Organizacion_Id(organizacionId);
+    }
+
     @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "WHERE p.idPaciente = :idPaciente")
-    Optional<PacienteDetalleDTO> findDetalleById(@Param("idPaciente") Integer idPaciente);
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo) " +
+           "FROM Paciente pac JOIN pac.usuario u WHERE pac.id = :id")
+    Optional<PacienteDetalleDTO> findDetalleById(@Param("id") Integer id);
 
-    /**
-     * Obtiene todos los pacientes de una organización con su información completa.
-     *
-     * @param idOrganizacion ID de la organización
-     * @return Lista de DTOs con información completa de pacientes
-     */
     @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "WHERE o.idOrganizacion = :idOrganizacion " +
-           "ORDER BY u.apellidos, u.nombre")
-    List<PacienteDetalleDTO> findDetalleByOrganizacion(@Param("idOrganizacion") Integer idOrganizacion);
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo) " +
+           "FROM Paciente pac JOIN pac.usuario u WHERE u.organizacion.id = :organizacionId")
+    List<PacienteDetalleDTO> findDetalleByOrganizacion(@Param("organizacionId") Integer organizacionId);
 
-    /**
-     * Obtiene todos los pacientes activos de una organización.
-     *
-     * @param idOrganizacion ID de la organización
-     * @return Lista de DTOs con información completa de pacientes activos
-     */
     @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "WHERE o.idOrganizacion = :idOrganizacion " +
-           "AND u.activo = true " +
-           "ORDER BY u.apellidos, u.nombre")
-    List<PacienteDetalleDTO> findActivosByOrganizacion(@Param("idOrganizacion") Integer idOrganizacion);
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo) " +
+           "FROM Paciente pac JOIN pac.usuario u " +
+           "WHERE u.organizacion.id = :organizacionId AND u.activo = true")
+    List<PacienteDetalleDTO> findActivosByOrganizacion(@Param("organizacionId") Integer organizacionId);
 
-    /**
-     * Obtiene los pacientes asignados a un profesional específico.
-     *
-     * @param idProfesional ID del profesional
-     * @param soloActivos Si es true, solo devuelve asignaciones activas
-     * @return Lista de pacientes con información completa
-     */
-    @Query("SELECT DISTINCT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "JOIN p.asignaciones a " +
-           "WHERE a.profesional.idProfesional = :idProfesional " +
-           "AND (:soloActivos = false OR a.activo = true) " +
-           "ORDER BY u.apellidos, u.nombre")
+    @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo, " +
+           "u.id, u.tipoUsuario, u.fechaRegistro, u.ultimoAcceso, " +
+           "org.id, org.nombreOficial, org.cif) " +
+           "FROM Paciente pac JOIN pac.usuario u JOIN u.organizacion org JOIN pac.asignaciones a " +
+           "WHERE a.profesional.id = :profesionalId AND a.activo = :activo")
     List<PacienteDetalleDTO> findPacientesByProfesional(
-            @Param("idProfesional") Integer idProfesional,
-            @Param("soloActivos") boolean soloActivos);
+        @Param("profesionalId") Integer profesionalId,
+        @Param("activo") boolean activo
+    );
 
-    /**
-     * Busca pacientes sin asignar (sin asignaciones activas) en una organización.
-     * Útil para mostrar pacientes disponibles para asignación.
-     *
-     * @param idOrganizacion ID de la organización
-     * @return Lista de pacientes sin asignación activa
-     */
     @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "WHERE o.idOrganizacion = :idOrganizacion " +
-           "AND u.activo = true " +
-           "AND NOT EXISTS (" +
-           "  SELECT a FROM AsignacionProfesionalPaciente a " +
-           "  WHERE a.paciente.idPaciente = p.idPaciente " +
-           "  AND a.activo = true" +
-           ") " +
-           "ORDER BY u.apellidos, u.nombre")
-    List<PacienteDetalleDTO> findSinAsignarByOrganizacion(@Param("idOrganizacion") Integer idOrganizacion);
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo) " +
+           "FROM Paciente pac JOIN pac.usuario u " +
+           "WHERE u.organizacion.id = :organizacionId " +
+           "AND NOT EXISTS (SELECT 1 FROM AsignacionProfesionalPaciente a WHERE a.paciente.id = pac.id AND a.activo = true)")
+    List<PacienteDetalleDTO> findSinAsignarByOrganizacion(@Param("organizacionId") Integer organizacionId);
 
-    /**
-     * Busca pacientes por nombre o apellidos (búsqueda parcial) dentro de una organización.
-     *
-     * @param searchTerm Término de búsqueda
-     * @param idOrganizacion ID de la organización
-     * @return Lista de pacientes que coinciden con la búsqueda
-     */
     @Query("SELECT new com.alma.alma_backend.dto.PacienteDetalleDTO(" +
-           "p.idPaciente, p.fechaNacimiento, p.genero, " +
-           "u.idUsuario, u.email, u.nombre, u.apellidos, u.tipoUsuario, " +
-           "u.activo, u.fechaRegistro, u.ultimoAcceso, " +
-           "o.idOrganizacion, o.nombreOrganizacion, o.cif, o.activa) " +
-           "FROM Paciente p " +
-           "JOIN p.usuario u " +
-           "JOIN u.organizacion o " +
-           "WHERE o.idOrganizacion = :idOrganizacion " +
-           "AND u.activo = true " +
-           "AND (LOWER(u.nombre) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
-           "     OR LOWER(u.apellidos) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
-           "ORDER BY u.apellidos, u.nombre")
+           "pac.id, u.nombre, u.apellidos, u.email, pac.tarjetaSanitaria, " +
+           "pac.fechaNacimiento, pac.genero, u.activo) " +
+           "FROM Paciente pac JOIN pac.usuario u " +
+           "WHERE u.organizacion.id = :organizacionId " +
+           "AND (LOWER(u.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')) " +
+           "OR LOWER(u.apellidos) LIKE LOWER(CONCAT('%', :nombre, '%')))")
     List<PacienteDetalleDTO> searchByNombreAndOrganizacion(
-            @Param("searchTerm") String searchTerm,
-            @Param("idOrganizacion") Integer idOrganizacion);
+        @Param("nombre") String nombre,
+        @Param("organizacionId") Integer organizacionId
+    );
 }

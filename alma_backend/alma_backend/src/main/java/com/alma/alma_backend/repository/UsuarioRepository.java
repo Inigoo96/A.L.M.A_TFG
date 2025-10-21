@@ -23,6 +23,13 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(String email);
 
     /**
+     * Busca un usuario por su DNI.
+     * @param dni El DNI del usuario
+     * @return Optional con el usuario si existe
+     */
+    Optional<Usuario> findByDni(String dni);
+
+    /**
      * Verifica si existe un usuario con el email dado.
      * @param email El email a verificar
      * @return true si existe, false si no
@@ -42,5 +49,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * @param organizacionId El ID de la organización
      * @return Lista de usuarios de esa organización
      */
-    List<Usuario> findByOrganizacionIdOrganizacion(Integer organizacionId);
+    List<Usuario> findByOrganizacion_Id(Integer organizacionId);
+
+    /**
+     * Alias del método anterior para compatibilidad.
+     * @param organizacionId El ID de la organización
+     * @return Lista de usuarios de esa organización
+     */
+    default List<Usuario> findByOrganizacionIdOrganizacion(Integer organizacionId) {
+        return findByOrganizacion_Id(organizacionId);
+    }
 }

@@ -18,7 +18,10 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_USUARIO")
-    private Integer idUsuario;
+    private Integer id;
+
+    @Column(name = "DNI", nullable = false, unique = true, length = 15)
+    private String dni;
 
     @Column(name = "EMAIL", nullable = false, unique = true, length = 100)
     private String email;
@@ -32,12 +35,15 @@ public class Usuario {
     @Column(name = "APELLIDOS", length = 100)
     private String apellidos;
 
+    @Column(name = "TELEFONO", length = 20)
+    private String telefono;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "TIPO_USUARIO", nullable = false, length = 20)
     private TipoUsuario tipoUsuario;
-
+    
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "organizacion_id", nullable = false)
+    @JoinColumn(name = "ID_ORGANIZACION", nullable = false)
     private Organizacion organizacion;
 
     @Column(name = "ACTIVO")
@@ -54,6 +60,13 @@ public class Usuario {
     @Column(name = "PASSWORD_TEMPORAL")
     @ColumnDefault("true")
     private Boolean passwordTemporal;
+
+    // --- Campos específicos para el Administrador que registra la organización ---
+    @Column(name = "CARGO", length = 100)
+    private String cargo;
+
+    @Column(name = "DOCUMENTO_CARGO_URL", length = 255)
+    private String documentoCargoUrl;
 
     @PrePersist
     protected void onCreate() {

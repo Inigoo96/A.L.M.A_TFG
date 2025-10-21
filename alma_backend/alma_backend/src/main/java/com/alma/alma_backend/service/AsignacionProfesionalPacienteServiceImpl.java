@@ -29,18 +29,18 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
     @Override
     @Transactional
     public AsignacionProfesionalPaciente save(AsignacionProfesionalPaciente asignacionRequest) {
-        if (asignacionRequest.getProfesional() == null || asignacionRequest.getProfesional().getIdProfesional() == null) {
+        if (asignacionRequest.getProfesional() == null || asignacionRequest.getProfesional().getId() == null) {
             throw new IllegalStateException("El ID del profesional es obligatorio");
         }
-        if (asignacionRequest.getPaciente() == null || asignacionRequest.getPaciente().getIdPaciente() == null) {
+        if (asignacionRequest.getPaciente() == null || asignacionRequest.getPaciente().getId() == null) {
             throw new IllegalStateException("El ID del paciente es obligatorio");
         }
 
-        Profesional profesional = profesionalRepository.findById(asignacionRequest.getProfesional().getIdProfesional())
-                .orElseThrow(() -> new ResourceNotFoundException("Profesional no encontrado con id: " + asignacionRequest.getProfesional().getIdProfesional()));
+        Profesional profesional = profesionalRepository.findById(asignacionRequest.getProfesional().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Profesional no encontrado con id: " + asignacionRequest.getProfesional().getId()));
 
-        Paciente paciente = pacienteRepository.findById(asignacionRequest.getPaciente().getIdPaciente())
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + asignacionRequest.getPaciente().getIdPaciente()));
+        Paciente paciente = pacienteRepository.findById(asignacionRequest.getPaciente().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + asignacionRequest.getPaciente().getId()));
 
         AsignacionProfesionalPaciente nuevaAsignacion = new AsignacionProfesionalPaciente();
         nuevaAsignacion.setProfesional(profesional);
@@ -57,32 +57,32 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
 
     @Override
     public List<AsignacionProfesionalPaciente> findByPacienteId(Integer pacienteId) {
-        return asignacionRepository.findByPaciente_IdPaciente(pacienteId);
+        return asignacionRepository.findByPaciente_Id(pacienteId);
     }
 
     @Override
     public List<AsignacionProfesionalPaciente> findByProfesionalId(Integer profesionalId) {
-        return asignacionRepository.findByProfesional_IdProfesional(profesionalId);
+        return asignacionRepository.findByProfesional_Id(profesionalId);
     }
 
     @Override
     public List<AsignacionProfesionalPaciente> findByPacienteIdAndOrganizacionId(Integer pacienteId, Integer organizacionId) {
-        return asignacionRepository.findByPaciente_IdPacienteAndPaciente_Usuario_Organizacion_IdOrganizacion(pacienteId, organizacionId);
+        return asignacionRepository.findByPaciente_IdAndPaciente_Usuario_Organizacion_Id(pacienteId, organizacionId);
     }
 
     @Override
     public List<AsignacionProfesionalPaciente> findByProfesionalIdAndOrganizacionId(Integer profesionalId, Integer organizacionId) {
-        return asignacionRepository.findByProfesional_IdProfesionalAndProfesional_Usuario_Organizacion_IdOrganizacion(profesionalId, organizacionId);
+        return asignacionRepository.findByProfesional_IdAndProfesional_Usuario_Organizacion_Id(profesionalId, organizacionId);
     }
 
     @Override
     public List<AsignacionProfesionalPaciente> findActivasByPacienteId(Integer pacienteId) {
-        return asignacionRepository.findByPaciente_IdPacienteAndActivoTrue(pacienteId);
+        return asignacionRepository.findByPaciente_IdAndActivoTrue(pacienteId);
     }
 
     @Override
     public Optional<AsignacionProfesionalPaciente> findPrincipalByPacienteId(Integer pacienteId) {
-        return asignacionRepository.findByPaciente_IdPacienteAndEsPrincipalTrueAndActivoTrue(pacienteId);
+        return asignacionRepository.findByPaciente_IdAndEsPrincipalTrueAndActivoTrue(pacienteId);
     }
 
     @Override

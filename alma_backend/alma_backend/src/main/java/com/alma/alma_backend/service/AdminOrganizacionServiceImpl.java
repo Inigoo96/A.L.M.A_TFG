@@ -28,18 +28,18 @@ public class AdminOrganizacionServiceImpl implements AdminOrganizacionService {
     @Override
     @Transactional
     public AdminOrganizacion save(AdminOrganizacion adminRequest) {
-        if (adminRequest.getUsuario() == null || adminRequest.getUsuario().getIdUsuario() == null) {
+        if (adminRequest.getUsuario() == null || adminRequest.getUsuario().getId() == null) {
             throw new RuntimeException("El ID del usuario es obligatorio");
         }
-        if (adminRequest.getOrganizacion() == null || adminRequest.getOrganizacion().getIdOrganizacion() == null) {
+        if (adminRequest.getOrganizacion() == null || adminRequest.getOrganizacion().getId() == null) {
             throw new RuntimeException("El ID de la organización es obligatorio");
         }
 
-        Usuario usuario = usuarioRepository.findById(adminRequest.getUsuario().getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + adminRequest.getUsuario().getIdUsuario()));
+        Usuario usuario = usuarioRepository.findById(adminRequest.getUsuario().getId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + adminRequest.getUsuario().getId()));
 
-        Organizacion organizacion = organizacionRepository.findById(adminRequest.getOrganizacion().getIdOrganizacion())
-                .orElseThrow(() -> new RuntimeException("Organización no encontrada con id: " + adminRequest.getOrganizacion().getIdOrganizacion()));
+        Organizacion organizacion = organizacionRepository.findById(adminRequest.getOrganizacion().getId())
+                .orElseThrow(() -> new RuntimeException("Organización no encontrada con id: " + adminRequest.getOrganizacion().getId()));
 
         AdminOrganizacion nuevoAdmin = new AdminOrganizacion();
         nuevoAdmin.setUsuario(usuario);
@@ -55,7 +55,7 @@ public class AdminOrganizacionServiceImpl implements AdminOrganizacionService {
 
     @Override
     public Optional<AdminOrganizacion> findByUsuarioId(Integer usuarioId) {
-        return adminOrganizacionRepository.findByUsuario_IdUsuario(usuarioId);
+        return adminOrganizacionRepository.findByUsuario_Id(usuarioId);
     }
 
     @Override

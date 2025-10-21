@@ -1,6 +1,6 @@
 package com.alma.alma_backend.dto;
 
-import lombok.AllArgsConstructor;
+import com.alma.alma_backend.entity.EstadoVerificacion;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class OrganizacionEstadisticasDTO {
 
     /**
@@ -32,7 +31,12 @@ public class OrganizacionEstadisticasDTO {
     private String cif;
 
     /**
-     * Indica si la organización está actualmente activa
+     * Estado de verificación de la organización
+     */
+    private EstadoVerificacion estadoVerificacion;
+
+    /**
+     * Indica si la organización está actualmente activa (derivado de estadoVerificacion)
      */
     private Boolean activa;
 
@@ -60,6 +64,33 @@ public class OrganizacionEstadisticasDTO {
      * Número de usuarios con rol SUPER_ADMIN (normalmente debería ser 0 para organizaciones específicas)
      */
     private Long superAdmins;
+
+    /**
+     * Constructor simplificado para queries JPQL en OrganizacionRepository.
+     * Este constructor recibe el estadoVerificacion directamente y calcula los totales.
+     *
+     * @param idOrganizacion ID de la organización
+     * @param nombreOrganizacion Nombre de la organización
+     * @param cif CIF de la organización
+     * @param estadoVerificacion Estado de verificación de la organización
+     * @param totalUsuarios Total de usuarios
+     * @param profesionales Cantidad de profesionales
+     * @param pacientes Cantidad de pacientes
+     */
+    public OrganizacionEstadisticasDTO(Integer idOrganizacion, String nombreOrganizacion,
+                                       String cif, EstadoVerificacion estadoVerificacion,
+                                       Long totalUsuarios, Long profesionales, Long pacientes) {
+        this.idOrganizacion = idOrganizacion;
+        this.nombreOrganizacion = nombreOrganizacion;
+        this.cif = cif;
+        this.estadoVerificacion = estadoVerificacion;
+        this.activa = estadoVerificacion == EstadoVerificacion.VERIFICADA;
+        this.totalUsuarios = totalUsuarios != null ? totalUsuarios : 0L;
+        this.profesionales = profesionales != null ? profesionales : 0L;
+        this.pacientes = pacientes != null ? pacientes : 0L;
+        this.admins = 0L;
+        this.superAdmins = 0L;
+    }
 
     /**
      * Constructor para proyecciones de JPA que calcula el total automáticamente.
