@@ -10,7 +10,7 @@
 // ============================================
 // CONFIGURACIÓN - CAMBIA ESTA IP
 // ============================================
-const API_BASE_URL = 'http://172.17.21.23:8080/api';
+const API_BASE_URL = 'http://192.168.1.41:8080/api';
 
 // ============================================
 // NO MODIFICAR DEBAJO DE ESTA LÍNEA

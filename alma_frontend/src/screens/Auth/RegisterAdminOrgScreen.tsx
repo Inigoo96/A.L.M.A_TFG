@@ -5,8 +5,6 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Text,
-  View,
 } from 'react-native';
 import authService from '../../services/authService';
 import {isValidDNI} from '../../utils/validation';
@@ -15,6 +13,7 @@ import {
   Container,
   Header,
   HeartIcon,
+  Separator,
   Title,
   InputCard,
   InputLabel,
@@ -147,10 +146,11 @@ const RegisterAdminOrgScreen = ({route, navigation}: any) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
       <Container>
+        <Header>
+          <HeartIcon source={require('../../assets/images/alma_logo.png')} resizeMode="contain" />
+        </Header>
+        <Separator />
         <ScrollView contentContainerStyle={{padding: 24}} keyboardShouldPersistTaps="handled">
-          <Header>
-            <HeartIcon source={require('../../assets/images/alma_logo.png')} resizeMode="contain" />
-          </Header>
           <Title>Datos del Administrador</Title>
 
           <InputCard>

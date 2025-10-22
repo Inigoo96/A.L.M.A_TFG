@@ -16,6 +16,7 @@ import {
   Container,
   Header,
   HeartIcon,
+  Separator,
   Title,
   InputCard,
   InputLabel,
@@ -135,10 +136,11 @@ const RegisterOrganizationFormScreen = ({navigation}: any) => {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
       <Container>
+        <Header>
+          <HeartIcon source={require('../../assets/images/alma_logo.png')} resizeMode="contain" />
+        </Header>
+        <Separator />
         <ScrollView contentContainerStyle={{padding: 24}} keyboardShouldPersistTaps="handled">
-          <Header>
-            <HeartIcon source={require('../../assets/images/alma_logo.png')} resizeMode="contain" />
-          </Header>
           <Title>Registro de Organización</Title>
 
           <InputCard>

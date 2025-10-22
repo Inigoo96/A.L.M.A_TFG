@@ -20,7 +20,7 @@ export const Container = styled(View)`
 
 export const Header = styled(View)`
   padding: 16px;
-  align-items: flex-end;
+  align-items: flex-start;
 `;
 
 export const HeartIcon = styled(Image)`
@@ -28,11 +28,18 @@ export const HeartIcon = styled(Image)`
   height: 40px;
 `;
 
+export const Separator = styled(View)`
+  width: 100%;
+  height: 1px;
+  background-color: ${theme.green};
+`;
+
 export const Title = styled(Text)`
   font-size: 28px;
   font-weight: bold;
   color: ${theme.black};
   text-align: center;
+  margin-top: 16px;
   margin-bottom: 24px;
 `;
 
