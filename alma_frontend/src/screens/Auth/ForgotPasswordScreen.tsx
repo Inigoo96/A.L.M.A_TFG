@@ -1,58 +1,44 @@
 import React, {useState} from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
-  Animated,
-  Pressable,
 } from 'react-native';
-import authService from '../../services/authService';
-import {colors} from '../../theme';
-import {styles} from '../../styles/screens/Auth/ForgotPasswordScreen.styles';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  Container,
+  Header,
+  HeartIcon,
+  Separator,
+  Title,
+  Card,
+  CardTitle,
+  CardSubtitle,
+  Illustration,
+  Form,
+  InputLabel,
+  InputContainer,
+  StyledInput,
+  SendButton,
+  ButtonText,
+  BackButton,
+  BackButtonText,
+  theme
+} from '../../styles/screens/Auth/ForgotPasswordScreen.styles';
 
 const ForgotPasswordScreen = ({navigation}: any) => {
   const [email, setEmail] = useState('');
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Animación para el botón
-  const buttonScale = React.useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(buttonScale, {
-      toValue: 0.96,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(buttonScale, {
-      toValue: 1,
-      friction: 3,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const isFormValid = () => {
-    return email.length > 0 && validateEmail(email);
-  };
-
   const handleResetPassword = async () => {
-    if (!isFormValid()) {
+    if (!validateEmail(email)) {
       Alert.alert('Error', 'Por favor, introduce un email válido');
       return;
     }
@@ -61,11 +47,14 @@ const ForgotPasswordScreen = ({navigation}: any) => {
 
     try {
       // TODO: Implementar la llamada al servicio de reseteo de contraseña
-      // await authService.resetPassword(email);
+      // await authService.forgotPassword(email);
       
+      // Simulating a network request
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       Alert.alert(
-        'Éxito',
-        'Se ha enviado un enlace de recuperación a tu correo electrónico',
+        'Correo Enviado',
+        'Si la dirección de correo está registrada, recibirás instrucciones para restablecer tu contraseña.',
         [
           {
             text: 'OK',
@@ -83,96 +72,47 @@ const ForgotPasswordScreen = ({navigation}: any) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Image
-            source={require('../../assets/images/alma_logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+      style={{flex: 1}}>
+        <Container>
+            <Header>
+                <HeartIcon source={require('../../assets/images/alma_logo.png')} resizeMode="contain" />
+            </Header>
+            <Separator/>
+            <ScrollView contentContainerStyle={{padding: 16}} keyboardShouldPersistTaps="handled">
+                <Title>Recuperar Contraseña</Title>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Recuperar contraseña</Text>
+                <Card>
+                    <CardTitle>¿Olvidaste tu contraseña?</CardTitle>
+                    <CardSubtitle>Introduce tu correo y te enviaremos instrucciones para restablecerla</CardSubtitle>
+                    <Illustration>
+                        <Icon name="account-question-outline" size={80} color={theme.primaryGreen} />
+                    </Illustration>
+                </Card>
 
-          <View style={styles.alertBox}>
-            <Text style={styles.alertText}>
-              Recibirás un correo con un enlace para establecer una nueva
-              contraseña
-            </Text>
-          </View>
+                <Form style={{marginTop: 24}}>
+                    <InputLabel>Email</InputLabel>
+                    <InputContainer>
+                        <StyledInput 
+                            placeholder="Introduce tu Email"
+                            placeholderTextColor={theme.green}
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            editable={!isLoading}
+                        />
+                    </InputContainer>
+                </Form>
 
-          {/* Campo de Email */}
-          <View style={styles.inputSection}>
-            <View style={styles.labelRow}>
-              <Text style={styles.inputLabel}>Correo electrónico</Text>
-            </View>
-            <View
-              style={[
-                styles.inputContainer,
-                emailFocused && styles.inputContainerFocused,
-                emailError && styles.inputContainerError,
-              ]}>
-              <Text style={styles.inputIcon}>✉️</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="tu@email.com"
-                value={email}
-                onChangeText={setEmail}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => {
-                  setEmailFocused(false);
-                  if (email && !validateEmail(email)) {
-                    setEmailError('Email no válido');
-                  } else {
-                    setEmailError('');
-                  }
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isLoading}
-                placeholderTextColor={colors.mediumGreen}
-              />
-            </View>
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
-            ) : null}
-          </View>
+                <SendButton onPress={handleResetPassword} disabled={isLoading}>
+                    {isLoading ? <ActivityIndicator color={theme.black} /> : <ButtonText>Enviar</ButtonText>}
+                </SendButton>
 
-          {/* Botón de enviar con animación */}
-          <Pressable
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={handleResetPassword}
-            disabled={isLoading || !isFormValid()}>
-            <Animated.View
-              style={[
-                styles.button,
-                {transform: [{scale: buttonScale}]},
-                !isFormValid() && styles.buttonDisabled,
-              ]}>
-              {isLoading ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <View style={styles.buttonContent}>
-                  <Text style={styles.buttonText}>Enviar instrucciones</Text>
-                  <Text style={styles.buttonIcon}>→</Text>
-                </View>
-              )}
-            </Animated.View>
-          </Pressable>
-
-          {/* Botón de volver */}
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}>
-            <Text style={styles.backButtonText}>Volver al inicio de sesión</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+                <BackButton onPress={() => navigation.goBack()} disabled={isLoading}>
+                    <BackButtonText>Volver</BackButtonText>
+                </BackButton>
+            </ScrollView>
+        </Container>
     </KeyboardAvoidingView>
   );
 };

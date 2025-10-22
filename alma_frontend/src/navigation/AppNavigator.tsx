@@ -4,7 +4,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import SplashScreen from '../screens/SplashScreen';
 import UserTypeSelectionScreen from '../screens/Auth/UserTypeSelectionScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
-import RegisterOrganizationScreen from '../screens/Auth/RegisterOrganizationScreen';
+import RegisterOrganizationFormScreen from '../screens/Auth/RegisterOrganizationFormScreen';
+import RegisterAdminOrgScreen from '../screens/Auth/RegisterAdminOrgScreen';
 import ChangePasswordScreen from '../screens/Auth/ChangePasswordScreen';
 import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -18,7 +19,8 @@ export type RootStackParamList = {
   Splash: undefined;
   UserTypeSelection: undefined;
   Login: undefined;
-  RegisterOrganization: undefined;
+  RegisterOrganizationForm: undefined;
+  RegisterAdminOrg: { organizationData: any };
   ChangePassword: undefined;
   ForgotPassword: undefined;
   Dashboard: undefined;
@@ -42,7 +44,8 @@ const AppNavigator = () => {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="UserTypeSelection" component={UserTypeSelectionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="RegisterOrganization" component={RegisterOrganizationScreen} />
+        <Stack.Screen name="RegisterOrganizationForm" component={RegisterOrganizationFormScreen} />
+        <Stack.Screen name="RegisterAdminOrg" component={RegisterAdminOrgScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />

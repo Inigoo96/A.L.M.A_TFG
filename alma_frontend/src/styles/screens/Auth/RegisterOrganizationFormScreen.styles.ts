@@ -1,6 +1,5 @@
 import styled from 'styled-components/native';
 import {Image, Text, TouchableOpacity, View, TextInput} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export const theme = {
   primaryGreen: '#ACD467',
@@ -9,6 +8,8 @@ export const theme = {
   black: '#000000',
   white: '#FFFFFF',
   green: '#ACD467',
+  creamBackground: '#f1ebdd',
+  grayText: '#888',
 };
 
 export const Container = styled(View)`
@@ -21,7 +22,7 @@ export const Header = styled(View)`
   align-items: flex-start;
 `;
 
-export const Logo = styled(Image)`
+export const HeartIcon = styled(Image)`
   width: 40px;
   height: 40px;
 `;
@@ -29,31 +30,26 @@ export const Logo = styled(Image)`
 export const Separator = styled(View)`
   width: 100%;
   height: 1px;
-  background-color: ${theme.lightGreen};
-`;
-
-export const ContentContainer = styled(View)`
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding-horizontal: 24px;
+  background-color: ${theme.green};
 `;
 
 export const Title = styled(Text)`
-  font-size: 32px;
+  font-size: 28px;
   font-weight: bold;
   color: ${theme.black};
-  margin-bottom: 32px;
+  text-align: center;
+  margin-top: 16px;
+  margin-bottom: 24px;
 `;
 
 export const InputCard = styled(View)`
-  width: 100%;
   background-color: ${theme.white};
   border-radius: 12px;
   border-width: 1px;
   border-color: ${theme.softGreenishGray};
-  padding: 8px 16px;
+  padding: 16px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 `;
 
 export const InputLabel = styled(Text)`
@@ -65,56 +61,68 @@ export const InputLabel = styled(Text)`
 export const InputWrapper = styled(View)`
   flex-direction: row;
   align-items: center;
+  border-bottom-width: 1px;
+  border-bottom-color: ${theme.softGreenishGray};
+  padding-bottom: 8px;
 `;
 
 export const StyledInput = styled(TextInput)`
   flex: 1;
   font-size: 16px;
   color: ${theme.black};
+  margin-left: 8px;
 `;
 
-export const InputIcon = styled(Icon)`
-  margin-left: 12px;
-`;
-
-export const ForgotPasswordText = styled(Text)`
-  font-size: 14px;
-  color: ${theme.green};
-  text-align: right;
-  width: 100%;
-  margin-bottom: 32px;
-`;
-
-export const AccessButton = styled(TouchableOpacity)`
+export const NextButton = styled(TouchableOpacity)`
   width: 100%;
   background-color: ${theme.primaryGreen};
   border-radius: 24px;
   padding: 16px;
   align-items: center;
   justify-content: center;
-  margin-bottom: 48px;
+  margin-top: 16px;
+  margin-bottom: 16px;
 `;
 
-export const AccessButtonText = styled(Text)`
+export const ButtonText = styled(Text)`
   font-size: 20px;
   font-weight: bold;
   color: ${theme.black};
-`;
-
-export const FooterText = styled(Text)`
-  font-size: 14px;
-  color: ${theme.green};
-  text-decoration-line: underline;
 `;
 
 export const BackButton = styled(TouchableOpacity)`
   padding: 8px;
   align-items: center;
   justify-content: center;
-  margin-top: 16px;
 `;
 
 export const BackButtonText = styled(Text)`
   font-size: 16px;
   color: ${theme.green};
+`;
+
+export const ErrorText = styled(Text)`
+    font-size: 12px;
+    color: #e74c3c;
+    margin-top: 4px;
+`;
+
+export const FileUploadButton = styled(TouchableOpacity)`
+    flex-direction: row;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+`;
+
+export const FileUploadButtonText = styled(Text)`
+    margin-left: 8px;
+    color: #333;
+`;
+
+export const FileNameText = styled(Text)`
+    margin-top: 8px;
+    font-style: italic;
+    color: ${theme.grayText};
 `;

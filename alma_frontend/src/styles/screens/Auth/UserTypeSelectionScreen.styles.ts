@@ -1,122 +1,148 @@
 import {StyleSheet} from 'react-native';
-import {colors, fontSize, spacing, borderRadius} from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
+
+  // Header con logo
   header: {
-    alignItems: 'center',
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    alignItems: 'flex-start',
+    paddingTop: 16,
+    paddingLeft: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ACD467',
   },
+
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: spacing.sm,
+    width: 40,
+    height: 40,
   },
-  title: {
-    fontSize: fontSize.xxl,
-    fontWeight: 'bold',
-    color: colors.darkGreen,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: fontSize.md,
-    color: colors.mediumGreen,
-    textAlign: 'center',
-  },
-  buttonsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.xl,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.xl,
-    borderRadius: borderRadius.xl,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-    minHeight: 110,
-  },
-  buttonPrimary: {
-    backgroundColor: colors.primary,
-  },
-  buttonSecondary: {
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  buttonPressed: {
-    shadowOpacity: 0.1,
-    elevation: 4,
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.xl,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.lg,
-  },
-  icon: {
-    fontSize: 34,
-  },
-  buttonContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  buttonTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.darkGreen,
-    marginBottom: spacing.xs,
-  },
-  buttonSubtitle: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  footer: {
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: fontSize.sm,
-    color: colors.mediumGreen,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
+
   helpButtonContainer: {
     position: 'absolute',
-    top: spacing.xl,
-    right: spacing.lg,
-    zIndex: 999,
+    top: 16,
+    right: 16,
+    zIndex: 10,
   },
+
   helpButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#8CB875',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 3,
   },
+
   helpButtonText: {
-    fontSize: fontSize.xl,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: colors.white,
+    color: '#8CB875',
+  },
+
+  // Título central
+  titleContainer: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+
+  mainTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+  },
+
+  // Container de tarjetas
+  cardsContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+
+  // Tarjeta individual
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+
+  cardPressed: {
+    transform: [{scale: 0.98}],
+    opacity: 0.9,
+  },
+
+  cardImage: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#F5F5F5',
+  },
+
+  cardContent: {
+    padding: 20,
+  },
+
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    flex: 1,
+  },
+
+  accessButton: {
+    backgroundColor: '#D4E8CC',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+
+  accessButtonText: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  cardDescription: {
+    fontSize: 14,
+    color: '#888888',
+    lineHeight: 20,
+  },
+
+  // Footer
+  footer: {
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
+
+  footerText: {
+    fontSize: 13,
+    color: '#8CB875',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });

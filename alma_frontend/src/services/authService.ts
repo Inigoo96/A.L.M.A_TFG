@@ -104,21 +104,12 @@ class AuthService {
     return token !== null;
   }
 
-  async registerOrganization(data: RegisterOrganizationRequest): Promise<LoginResponse> {
+  async registerOrganization(data: RegisterOrganizationRequest): Promise<void> {
     try {
       console.log('Registrando organización:', data.nombreOficial);
 
-      const response = await api.post<LoginResponse>('/auth/register/organization', data);
+      await api.post('/auth/register/organization', data);
 
-      console.log('Organización registrada exitosamente:', response.data);
-
-      // Guardar el token automáticamente tras el registro
-      await AsyncStorage.setItem('jwt_token', response.data.access_token);
-      await AsyncStorage.setItem('user_email', response.data.email);
-      await AsyncStorage.setItem('user_type', response.data.role);
-      await AsyncStorage.setItem('password_temporal', String(response.data.password_temporal === true));
-
-      return response.data;
     } catch (error: any) {
       console.error('Error en registro:', error);
       console.error('Error response:', error.response);

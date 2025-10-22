@@ -173,7 +173,8 @@ public class ValidationUtils {
 
     /**
      * Valida el formato de un código REGCESS (Registro General de Centros del SNS).
-     * Formato: número de hasta 50 caracteres.
+     * Formato: alfanumérico de 8 a 50 caracteres, puede incluir guiones.
+     * Ejemplo: "ES-1234567890", "2800001234", "REGCESS-28-001"
      * @param codigoRegcess Código REGCESS
      * @return true si el formato es válido, false en caso contrario
      */
@@ -182,8 +183,11 @@ public class ValidationUtils {
             return false;
         }
 
-        // Formato general: alfanumérico, hasta 50 caracteres
-        return codigoRegcess.matches("^[A-Z0-9]{1,50}$");
+        // Eliminar espacios
+        String codigoLimpio = codigoRegcess.replaceAll("\\s", "").toUpperCase();
+
+        // Formato general: alfanumérico, entre 8 y 50 caracteres, puede incluir guiones
+        return codigoLimpio.matches("^[A-Z0-9-]{8,50}$");
     }
 
     /**
@@ -245,5 +249,85 @@ public class ValidationUtils {
         // Verificar que el dominio contenga el nombre de la organización
         return dominio.contains(nombreOrg) || dominio.equals(nombreOrg + ".com")
             || dominio.equals(nombreOrg + ".es");
+    }
+
+    /**
+     * Valida el Número de Afiliación a la Seguridad Social (NASS).
+     * Formato: PP/NNNNNNNN/DD donde:
+     * - PP: Código de provincia (01-52, o 66 para extranjeros)
+     * - NNNNNNNN: 8 dígitos del número
+     * - DD: 2 dígitos de control calculados mediante el algoritmo oficial (PP + NNNNNNNN) % 97
+     *
+     * @param nass Número de afiliación a la Seguridad Social
+     * @return true si es válido, false en caso contrario
+     */
+    public static boolean isValidNumeroSeguridadSocial(String nass) {
+        if (nass == null) {
+            return false;
+        }
+
+        // Eliminar espacios y barras
+        String nassLimpio = nass.replaceAll("[\\s/]", "");
+
+        // Debe tener exactamente 12 dígitos
+        if (!nassLimpio.matches("^\\d{12}$")) {
+            return false;
+        }
+
+        try {
+            // Extraer componentes
+            int codigoProvincia = Integer.parseInt(nassLimpio.substring(0, 2));
+            String numeroBase = nassLimpio.substring(2, 10);
+            int digitosControl = Integer.parseInt(nassLimpio.substring(10, 12));
+
+            // Validar código de provincia (01-52, más 66 para extranjeros)
+            if ((codigoProvincia < 1 || codigoProvincia > 52) && codigoProvincia != 66) {
+                return false;
+            }
+
+            // Calcular dígitos de control según algoritmo oficial
+            // (PP + NNNNNNNN) % 97 = DD
+            long numeroCompleto = Long.parseLong(codigoProvincia + numeroBase);
+            int controlCalculado = (int) (numeroCompleto % 97);
+
+            // Verificar que coincidan
+            return controlCalculado == digitosControl;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Valida que un email NO sea de un dominio público o gratuito.
+     * Útil para verificar emails corporativos en registros de organizaciones.
+     *
+     * @param email Email a validar
+     * @return true si NO es dominio público (es corporativo), false si es dominio público
+     */
+    public static boolean isValidEmailCorporativo(String email) {
+        if (!isValidEmail(email)) {
+            return false;
+        }
+
+        // Lista de dominios públicos/gratuitos más comunes
+        String[] dominiosPublicos = {
+            "gmail.com", "hotmail.com", "outlook.com", "yahoo.com",
+            "live.com", "icloud.com", "protonmail.com", "mail.com",
+            "gmx.com", "aol.com", "yandex.com", "zoho.com",
+            "tutanota.com", "temp-mail.org", "guerrillamail.com",
+            "10minutemail.com", "mailinator.com"
+        };
+
+        // Extraer dominio del email
+        String dominio = email.substring(email.indexOf("@") + 1).toLowerCase();
+
+        // Verificar que NO esté en la lista de dominios públicos
+        for (String dominioPublico : dominiosPublicos) {
+            if (dominio.equals(dominioPublico)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -277,3 +277,115 @@ export const calcularEdad = (fechaNacimiento: string): number => {
 
   return age;
 };
+
+/**
+ * Validar Número de Afiliación a la Seguridad Social (NASS)
+ * Formato: PP/NNNNNNNN/DD donde:
+ * - PP: Código de provincia (01-52)
+ * - NNNNNNNN: 8 dígitos del número
+ * - DD: 2 dígitos de control
+ *
+ * @param nass Número de afiliación a la Seguridad Social
+ * @returns true si es válido, false en caso contrario
+ */
+export const isValidNumeroSeguridadSocial = (nass: string): boolean => {
+  if (!nass) return false;
+
+  // Eliminar espacios y barras para trabajar solo con dígitos
+  const clean = nass.replace(/[\s/]/g, '');
+
+  // Debe tener exactamente 12 dígitos
+  if (!/^\d{12}$/.test(clean)) {
+    return false;
+  }
+
+  // Extraer componentes
+  const codigoProvincia = parseInt(clean.substring(0, 2), 10);
+  const numeroBase = clean.substring(2, 10);
+  const digitosControl = clean.substring(10, 12);
+
+  // Validar código de provincia (01-52, más 66 para extranjeros)
+  if ((codigoProvincia < 1 || codigoProvincia > 52) && codigoProvincia !== 66) {
+    return false;
+  }
+
+  // Calcular dígitos de control
+  // El algoritmo oficial: (PP + NNNNNNNN) % 97 = DD
+  const numeroCompleto = parseInt(codigoProvincia.toString() + numeroBase, 10);
+  const controlCalculado = numeroCompleto % 97;
+
+  // Comparar con los dígitos de control proporcionados
+  return controlCalculado === parseInt(digitosControl, 10);
+};
+
+/**
+ * Formatear Número de Afiliación a la Seguridad Social
+ * @param nass Número de afiliación
+ * @returns NASS formateado como PP/NNNNNNNN/DD
+ */
+export const formatNumeroSeguridadSocial = (nass: string): string => {
+  if (!nass) return '';
+
+  const clean = nass.replace(/[\s/]/g, '');
+  if (clean.length === 12) {
+    return `${clean.substring(0, 2)}/${clean.substring(2, 10)}/${clean.substring(10, 12)}`;
+  }
+  return clean;
+};
+
+/**
+ * Validar que un email NO sea de un dominio público/genérico
+ * Para emails corporativos de organizaciones sanitarias
+ * @param email Email a validar
+ * @returns true si es corporativo, false si es dominio público
+ */
+export const isValidEmailCorporativo = (email: string): boolean => {
+  if (!isValidEmail(email)) return false;
+
+  // Lista de dominios públicos/gratuitos más comunes
+  const dominiosPublicos = [
+    'gmail.com',
+    'hotmail.com',
+    'outlook.com',
+    'yahoo.com',
+    'live.com',
+    'icloud.com',
+    'protonmail.com',
+    'mail.com',
+    'gmx.com',
+    'aol.com',
+    'yandex.com',
+    'zoho.com',
+    'tutanota.com',
+    'temp-mail.org',
+    'guerrillamail.com',
+    '10minutemail.com',
+    'mailinator.com',
+  ];
+
+  const dominio = email.split('@')[1]?.toLowerCase();
+
+  if (!dominio) return false;
+
+  // Verificar que no esté en la lista de dominios públicos
+  return !dominiosPublicos.includes(dominio);
+};
+
+/**
+ * Validar código REGCESS (Registro General de Centros, Servicios y Establecimientos Sanitarios)
+ * Formato básico de validación, el formato real puede variar
+ * @param codigo Código REGCESS
+ * @returns true si tiene formato válido, false en caso contrario
+ */
+export const isValidCodigoREGCESS = (codigo: string): boolean => {
+  if (!codigo) return false;
+
+  // Eliminar espacios
+  const clean = codigo.replace(/\s/g, '').toUpperCase();
+
+  // Formato general: alfanumérico, entre 8 y 20 caracteres
+  // Ejemplo real: puede ser como "1234567890" o "ES-1234567890"
+  const regcessRegex = /^[A-Z0-9-]{8,20}$/;
+
+  return regcessRegex.test(clean);
+};

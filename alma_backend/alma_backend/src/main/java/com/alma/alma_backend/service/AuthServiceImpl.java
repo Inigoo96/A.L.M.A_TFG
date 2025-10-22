@@ -28,16 +28,43 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public UsuarioResponseDTO registrarOrganizacionYAdmin(OrganizacionRegistroDTO registroDTO) {
-        // ... (código existente sin cambios)
+        // === VALIDACIONES DE FORMATO ===
+
+        // Validar CIF
         if (!ValidationUtils.isValidCIF(registroDTO.getCif())) {
             throw new IllegalArgumentException("El CIF de la organización no es válido.");
         }
+
+        // Validar Número de Seguridad Social
+        if (!ValidationUtils.isValidNumeroSeguridadSocial(registroDTO.getNumeroSeguridadSocial())) {
+            throw new IllegalArgumentException("El número de la Seguridad Social no es válido. Formato: PP/NNNNNNNN/DD (12 dígitos).");
+        }
+
+        // Validar Email Corporativo (no dominios públicos)
+        if (!ValidationUtils.isValidEmailCorporativo(registroDTO.getEmailCorporativo())) {
+            throw new IllegalArgumentException("El email debe ser corporativo, no se permiten dominios públicos (gmail, hotmail, etc.).");
+        }
+
+        // Validar código REGCESS
+        if (!ValidationUtils.isValidCodigoREGCESS(registroDTO.getCodigoRegcess())) {
+            throw new IllegalArgumentException("El código REGCESS no tiene un formato válido.");
+        }
+
+        // Validar DNI del administrador
+        if (!ValidationUtils.isValidDNIorNIE(registroDTO.getAdministrador().getDni())) {
+            throw new IllegalArgumentException("El DNI/NIE del administrador no es válido.");
+        }
+
+        // === VALIDACIONES DE EXISTENCIA ===
+
         if (organizacionRepository.findByCif(registroDTO.getCif()).isPresent()) {
             throw new IllegalStateException("El CIF de la organización ya está registrado.");
         }
         if (usuarioRepository.findByEmail(registroDTO.getAdministrador().getEmail()).isPresent()) {
             throw new IllegalStateException("El email del administrador ya está en uso.");
         }
+
+        // === CREACIÓN DE ENTIDADES ===
 
         Organizacion nuevaOrganizacion = new Organizacion();
         nuevaOrganizacion.setCif(registroDTO.getCif());
