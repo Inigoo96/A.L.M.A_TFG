@@ -1,6 +1,7 @@
 package com.alma.alma_backend.repository;
 
 import com.alma.alma_backend.dto.OrganizacionEstadisticasDTO;
+import com.alma.alma_backend.entity.EstadoOrganizacion;
 import com.alma.alma_backend.entity.Organizacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -43,4 +44,12 @@ public interface OrganizacionRepository extends JpaRepository<Organizacion, Inte
            "WHERE o.estadoVerificacion = com.alma.alma_backend.entity.EstadoVerificacion.VERIFICADA " +
            "GROUP BY o.id, o.nombreOficial, o.cif, o.estadoVerificacion")
     List<OrganizacionEstadisticasDTO> obtenerEstadisticasOrganizacionesActivas();
+
+    /**
+     * Busca organizaciones por estado operativo.
+     *
+     * @param estado Estado de la organización (ACTIVA, SUSPENDIDA, BAJA)
+     * @return Lista de organizaciones con ese estado
+     */
+    List<Organizacion> findByEstado(EstadoOrganizacion estado);
 }

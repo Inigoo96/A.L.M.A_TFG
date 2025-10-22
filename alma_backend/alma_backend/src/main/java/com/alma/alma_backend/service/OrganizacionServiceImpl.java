@@ -1,7 +1,11 @@
 package com.alma.alma_backend.service;
 
+import com.alma.alma_backend.dto.CambioEstadoOrganizacionDTO;
 import com.alma.alma_backend.dto.OrganizacionEstadisticasDTO;
+import com.alma.alma_backend.entity.EstadoOrganizacion;
 import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.entity.TipoAccionAuditoria;
+import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.repository.OrganizacionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -19,6 +25,9 @@ public class OrganizacionServiceImpl implements OrganizacionService {
 
     @Autowired
     private OrganizacionRepository organizacionRepository;
+
+    @Autowired
+    private AuditoriaAdminService auditoriaAdminService;
 
     @Override
     public Organizacion save(Organizacion organizacion) {
@@ -105,5 +114,120 @@ public class OrganizacionServiceImpl implements OrganizacionService {
             logger.error("Error al obtener estadísticas de organizaciones activas", e);
             throw new RuntimeException("Error al obtener estadísticas de organizaciones activas", e);
         }
+    }
+
+    // =====================================================
+    // MÉTODOS DE GESTIÓN DE ESTADO (FASE 1)
+    // =====================================================
+
+    @Override
+    @Transactional
+    public Organizacion cambiarEstadoOrganizacion(Integer idOrganizacion, CambioEstadoOrganizacionDTO cambioEstadoDTO,
+                                                   Usuario usuarioAdmin, String ipOrigen) {
+        logger.info("Cambiando estado de organización ID: {} a {} por usuario: {}",
+                idOrganizacion, cambioEstadoDTO.getNuevoEstado(), usuarioAdmin.getEmail());
+
+        // Buscar la organización
+        Organizacion organizacion = organizacionRepository.findById(idOrganizacion)
+                .orElseThrow(() -> new RuntimeException("Organización no encontrada con ID: " + idOrganizacion));
+
+        // Guardar estado anterior para auditoría
+        EstadoOrganizacion estadoAnterior = organizacion.getEstado();
+
+        // Preparar datos para auditoría
+        Map<String, Object> datosAnteriores = new HashMap<>();
+        datosAnteriores.put("ESTADO", estadoAnterior.name());
+        datosAnteriores.put("NOMBRE_OFICIAL", organizacion.getNombreOficial());
+        datosAnteriores.put("CIF", organizacion.getCif());
+
+        // Cambiar estado
+        organizacion.setEstado(cambioEstadoDTO.getNuevoEstado());
+
+        // Guardar cambios
+        Organizacion organizacionActualizada = organizacionRepository.save(organizacion);
+
+        // Preparar datos nuevos para auditoría
+        Map<String, Object> datosNuevos = new HashMap<>();
+        datosNuevos.put("ESTADO", organizacionActualizada.getEstado().name());
+        datosNuevos.put("NOMBRE_OFICIAL", organizacionActualizada.getNombreOficial());
+        datosNuevos.put("CIF", organizacionActualizada.getCif());
+
+        // Determinar tipo de acción para auditoría
+        TipoAccionAuditoria tipoAccion = determinarTipoAccion(cambioEstadoDTO.getNuevoEstado());
+
+        // Registrar en auditoría
+        auditoriaAdminService.registrarAccion(
+                usuarioAdmin,
+                tipoAccion,
+                "ORGANIZACION",
+                idOrganizacion,
+                datosAnteriores,
+                datosNuevos,
+                cambioEstadoDTO.getMotivo(),
+                ipOrigen
+        );
+
+        logger.info("Estado de organización ID: {} cambiado exitosamente de {} a {}",
+                idOrganizacion, estadoAnterior, cambioEstadoDTO.getNuevoEstado());
+
+        return organizacionActualizada;
+    }
+
+    @Override
+    @Transactional
+    public Organizacion suspenderOrganizacion(Integer idOrganizacion, String motivo,
+                                              Usuario usuarioAdmin, String ipOrigen) {
+        logger.info("Suspendiendo organización ID: {} por usuario: {}", idOrganizacion, usuarioAdmin.getEmail());
+
+        CambioEstadoOrganizacionDTO cambioEstado = new CambioEstadoOrganizacionDTO();
+        cambioEstado.setNuevoEstado(EstadoOrganizacion.SUSPENDIDA);
+        cambioEstado.setMotivo(motivo);
+
+        return cambiarEstadoOrganizacion(idOrganizacion, cambioEstado, usuarioAdmin, ipOrigen);
+    }
+
+    @Override
+    @Transactional
+    public Organizacion activarOrganizacion(Integer idOrganizacion, String motivo,
+                                            Usuario usuarioAdmin, String ipOrigen) {
+        logger.info("Activando organización ID: {} por usuario: {}", idOrganizacion, usuarioAdmin.getEmail());
+
+        CambioEstadoOrganizacionDTO cambioEstado = new CambioEstadoOrganizacionDTO();
+        cambioEstado.setNuevoEstado(EstadoOrganizacion.ACTIVA);
+        cambioEstado.setMotivo(motivo);
+
+        return cambiarEstadoOrganizacion(idOrganizacion, cambioEstado, usuarioAdmin, ipOrigen);
+    }
+
+    @Override
+    @Transactional
+    public Organizacion darDeBajaOrganizacion(Integer idOrganizacion, String motivo,
+                                              Usuario usuarioAdmin, String ipOrigen) {
+        logger.warn("Dando de baja organización ID: {} por usuario: {}. IMPORTANTE: NO se elimina de BD.",
+                idOrganizacion, usuarioAdmin.getEmail());
+
+        CambioEstadoOrganizacionDTO cambioEstado = new CambioEstadoOrganizacionDTO();
+        cambioEstado.setNuevoEstado(EstadoOrganizacion.BAJA);
+        cambioEstado.setMotivo(motivo);
+
+        return cambiarEstadoOrganizacion(idOrganizacion, cambioEstado, usuarioAdmin, ipOrigen);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Organizacion> findByEstado(EstadoOrganizacion estado) {
+        logger.debug("Buscando organizaciones con estado: {}", estado);
+        return organizacionRepository.findByEstado(estado);
+    }
+
+    /**
+     * Método privado para determinar el tipo de acción según el nuevo estado.
+     */
+    private TipoAccionAuditoria determinarTipoAccion(EstadoOrganizacion nuevoEstado) {
+        return switch (nuevoEstado) {
+            case ACTIVA -> TipoAccionAuditoria.ACTIVAR_ORGANIZACION;
+            case SUSPENDIDA -> TipoAccionAuditoria.SUSPENDER_ORGANIZACION;
+            case BAJA -> TipoAccionAuditoria.DAR_BAJA_ORGANIZACION;
+        };
     }
 }

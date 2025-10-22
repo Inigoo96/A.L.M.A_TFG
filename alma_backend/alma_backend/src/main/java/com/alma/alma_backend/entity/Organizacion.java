@@ -53,4 +53,10 @@ public class Organizacion {
     @Column(name = "MOTIVO_RECHAZO", length = 500)
     private String motivoRechazo;
 
+    // --- Estado operativo de la organización ---
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ESTADO", nullable = false, length = 20)
+    private EstadoOrganizacion estado = EstadoOrganizacion.ACTIVA;
+
 }
