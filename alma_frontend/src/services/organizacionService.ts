@@ -2,6 +2,9 @@ import api from './api';
 import {
   OrganizacionDTO,
   OrganizacionEstadisticasDTO,
+  CambioEstadoOrganizacionDTO,
+  AuditoriaDTO,
+  EstadoOrganizacion,
 } from '../types/api.types';
 
 /**
@@ -16,22 +19,87 @@ class OrganizacionService {
    */
   async getAllOrganizaciones(): Promise<OrganizacionDTO[]> {
     try {
-      console.log('Obteniendo todas las organizaciones...');
       const response = await api.get<OrganizacionDTO[]>('/organizaciones');
-      console.log(`Se encontraron ${response.data.length} organizaciones`);
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener organizaciones:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver las organizaciones. Requiere rol ADMIN_ORGANIZACION o SUPER_ADMIN.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener las organizaciones.');
+    }
+  }
+
+  /**
+   * Obtener organizaciones por su estado
+   * Requiere rol: SUPER_ADMIN
+   * @param estado El estado por el cual filtrar
+   * @returns Lista de organizaciones
+   */
+  async getOrganizacionesPorEstado(
+    estado: EstadoOrganizacion,
+  ): Promise<OrganizacionDTO[]> {
+    try {
+      const response = await api.get<OrganizacionDTO[]>(
+        `/organizaciones/estado/${estado}`,
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error al obtener organizaciones por estado ${estado}:`, error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Error al obtener las organizaciones por estado.');
+    }
+  }
+
+  /**
+   * Cambia el estado de una organización (activar, suspender, dar de baja)
+   * Requiere rol: SUPER_ADMIN
+   * @param id ID de la organización
+   * @param data DTO con el nuevo estado y el motivo
+   * @returns La organización actualizada
+   */
+  async cambiarEstadoOrganizacion(
+    id: number,
+    data: CambioEstadoOrganizacionDTO,
+  ): Promise<OrganizacionDTO> {
+    try {
+      const response = await api.put<OrganizacionDTO>(
+        `/organizaciones/${id}/cambiar-estado`,
+        data,
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(`Error al cambiar el estado de la organización ${id}:`, error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Error al cambiar el estado de la organización.');
+    }
+  }
+
+  /**
+   * Obtiene el historial de auditoría de una organización específica
+   * Requiere rol: SUPER_ADMIN
+   * @param id ID de la organización
+   * @returns Lista de registros de auditoría
+   */
+  async getAuditoriaOrganizacion(id: number): Promise<AuditoriaDTO[]> {
+    try {
+      const response = await api.get<AuditoriaDTO[]>(
+        `/organizaciones/${id}/auditoria`,
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        `Error al obtener la auditoría de la organización ${id}:`,
+        error,
+      );
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Error al obtener la auditoría de la organización.');
     }
   }
 
@@ -43,25 +111,13 @@ class OrganizacionService {
    */
   async getOrganizacionById(id: number): Promise<OrganizacionDTO> {
     try {
-      console.log(`Obteniendo organización ID: ${id}`);
       const response = await api.get<OrganizacionDTO>(`/organizaciones/${id}`);
-      console.log('Organización encontrada:', response.data.nombreOficial);
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener organización:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver esta organización.');
-      }
-
-      if (error.response?.status === 404) {
-        throw new Error('Organización no encontrada.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener la organización.');
     }
   }
@@ -74,25 +130,13 @@ class OrganizacionService {
    */
   async getOrganizacionByCif(cif: string): Promise<OrganizacionDTO> {
     try {
-      console.log(`Obteniendo organización con CIF: ${cif}`);
       const response = await api.get<OrganizacionDTO>(`/organizaciones/cif/${cif}`);
-      console.log('Organización encontrada:', response.data.nombreOficial);
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener organización por CIF:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver esta organización.');
-      }
-
-      if (error.response?.status === 404) {
-        throw new Error('Organización no encontrada con ese CIF.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener la organización.');
     }
   }
@@ -103,23 +147,20 @@ class OrganizacionService {
    * @param organizacion Datos de la organización
    * @returns Organización creada
    */
-  async createOrganizacion(organizacion: Partial<OrganizacionDTO>): Promise<OrganizacionDTO> {
+  async createOrganizacion(
+    organizacion: Partial<OrganizacionDTO>,
+  ): Promise<OrganizacionDTO> {
     try {
-      console.log('Creando organización:', organizacion.nombreOficial);
-      const response = await api.post<OrganizacionDTO>('/organizaciones', organizacion);
-      console.log('Organización creada exitosamente');
+      const response = await api.post<OrganizacionDTO>(
+        '/organizaciones',
+        organizacion,
+      );
       return response.data;
     } catch (error: any) {
       console.error('Error al crear organización:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para crear organizaciones. Requiere rol SUPER_ADMIN.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al crear la organización.');
     }
   }
@@ -131,27 +172,21 @@ class OrganizacionService {
    * @param organizacion Datos actualizados
    * @returns Organización actualizada
    */
-  async updateOrganizacion(id: number, organizacion: Partial<OrganizacionDTO>): Promise<OrganizacionDTO> {
+  async updateOrganizacion(
+    id: number,
+    organizacion: Partial<OrganizacionDTO>,
+  ): Promise<OrganizacionDTO> {
     try {
-      console.log(`Actualizando organización ID: ${id}`);
-      const response = await api.put<OrganizacionDTO>(`/organizaciones/${id}`, organizacion);
-      console.log('Organización actualizada exitosamente');
+      const response = await api.put<OrganizacionDTO>(
+        `/organizaciones/${id}`,
+        organizacion,
+      );
       return response.data;
     } catch (error: any) {
       console.error('Error al actualizar organización:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para actualizar organizaciones. Requiere rol SUPER_ADMIN.');
-      }
-
-      if (error.response?.status === 404) {
-        throw new Error('Organización no encontrada.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al actualizar la organización.');
     }
   }
@@ -163,24 +198,12 @@ class OrganizacionService {
    */
   async deleteOrganizacion(id: number): Promise<void> {
     try {
-      console.log(`Eliminando organización ID: ${id}`);
       await api.delete(`/organizaciones/${id}`);
-      console.log('Organización eliminada exitosamente');
     } catch (error: any) {
       console.error('Error al eliminar organización:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para eliminar organizaciones. Requiere rol SUPER_ADMIN.');
-      }
-
-      if (error.response?.status === 404) {
-        throw new Error('Organización no encontrada.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al eliminar la organización.');
     }
   }
@@ -190,23 +213,19 @@ class OrganizacionService {
    * Requiere rol: SUPER_ADMIN
    * @returns Estadísticas de todas las organizaciones
    */
-  async getEstadisticasOrganizaciones(): Promise<OrganizacionEstadisticasDTO[]> {
+  async getEstadisticasOrganizaciones(): Promise<
+    OrganizacionEstadisticasDTO[]
+  > {
     try {
-      console.log('Obteniendo estadísticas de organizaciones...');
-      const response = await api.get<OrganizacionEstadisticasDTO[]>('/organizaciones/estadisticas');
-      console.log(`Estadísticas obtenidas para ${response.data.length} organizaciones`);
+      const response = await api.get<OrganizacionEstadisticasDTO[]>(
+        '/organizaciones/estadisticas',
+      );
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener estadísticas:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver estadísticas. Requiere rol SUPER_ADMIN.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener estadísticas de organizaciones.');
     }
   }
@@ -217,27 +236,19 @@ class OrganizacionService {
    * @param id ID de la organización
    * @returns Estadísticas de la organización
    */
-  async getEstadisticasOrganizacion(id: number): Promise<OrganizacionEstadisticasDTO> {
+  async getEstadisticasOrganizacion(
+    id: number,
+  ): Promise<OrganizacionEstadisticasDTO> {
     try {
-      console.log(`Obteniendo estadísticas de organización ID: ${id}`);
-      const response = await api.get<OrganizacionEstadisticasDTO>(`/organizaciones/${id}/estadisticas`);
-      console.log('Estadísticas obtenidas exitosamente');
+      const response = await api.get<OrganizacionEstadisticasDTO>(
+        `/organizaciones/${id}/estadisticas`,
+      );
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener estadísticas:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver estadísticas. Requiere rol SUPER_ADMIN.');
-      }
-
-      if (error.response?.status === 404) {
-        throw new Error('Organización no encontrada.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener estadísticas de la organización.');
     }
   }
@@ -247,23 +258,19 @@ class OrganizacionService {
    * Requiere rol: SUPER_ADMIN
    * @returns Estadísticas de organizaciones activas
    */
-  async getEstadisticasOrganizacionesActivas(): Promise<OrganizacionEstadisticasDTO[]> {
+  async getEstadisticasOrganizacionesActivas(): Promise<
+    OrganizacionEstadisticasDTO[]
+  > {
     try {
-      console.log('Obteniendo estadísticas de organizaciones activas...');
-      const response = await api.get<OrganizacionEstadisticasDTO[]>('/organizaciones/estadisticas/activas');
-      console.log(`Estadísticas obtenidas para ${response.data.length} organizaciones activas`);
+      const response = await api.get<OrganizacionEstadisticasDTO[]>(
+        '/organizaciones/estadisticas/activas',
+      );
       return response.data;
     } catch (error: any) {
       console.error('Error al obtener estadísticas:', error);
-
-      if (error.response?.status === 403) {
-        throw new Error('No tienes permisos para ver estadísticas. Requiere rol SUPER_ADMIN.');
-      }
-
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
-
       throw new Error('Error al obtener estadísticas de organizaciones activas.');
     }
   }

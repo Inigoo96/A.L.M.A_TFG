@@ -28,6 +28,12 @@ export enum EstadoVerificacion {
   RECHAZADA = 'RECHAZADA',
 }
 
+export enum EstadoOrganizacion {
+  ACTIVA = 'ACTIVA',
+  SUSPENDIDA = 'SUSPENDIDA',
+  BAJA = 'BAJA',
+}
+
 // ============================================
 // ORGANIZACION DTOs
 // ============================================
@@ -44,8 +50,46 @@ export interface OrganizacionDTO {
   documentoCifUrl?: string;
   documentoSeguridadSocialUrl?: string;
   estadoVerificacion: EstadoVerificacion;
+  estado: EstadoOrganizacion;
   motivoRechazo?: string;
   fechaRegistro: string; // ISO 8601 date string
+}
+
+export interface CambioEstadoOrganizacionDTO {
+  nuevoEstado: EstadoOrganizacion;
+  motivo: string;
+  observaciones?: string;
+}
+
+// ============================================
+// AUDITORIA DTOs
+// ============================================
+
+export enum TipoAccionAuditoria {
+  VERIFICAR_ORGANIZACION = 'VERIFICAR_ORGANIZACION',
+  RECHAZAR_ORGANIZACION = 'RECHAZAR_ORGANIZACION',
+  SUSPENDER_ORGANIZACION = 'SUSPENDER_ORGANIZACION',
+  ACTIVAR_ORGANIZACION = 'ACTIVAR_ORGANIZACION',
+  DAR_BAJA_ORGANIZACION = 'DAR_BAJA_ORGANIZACION',
+  MODIFICAR_ORGANIZACION = 'MODIFICAR_ORGANIZACION',
+  CREAR_SUPER_ADMIN = 'CREAR_SUPER_ADMIN',
+  ELIMINAR_USUARIO = 'ELIMINAR_USUARIO',
+  MODIFICAR_PERMISOS = 'MODIFICAR_PERMISOS',
+}
+
+export interface AuditoriaDTO {
+  id: number;
+  tipoAccion: TipoAccionAuditoria;
+  tablaAfectada: string;
+  idRegistroAfectado: number;
+  datosAnteriores?: any;
+  datosNuevos?: any;
+  motivo: string;
+  ipOrigen: string;
+  fechaAccion: string; // ISO 8601 date string
+  emailAdmin: string;
+  nombreAdmin: string;
+  apellidosAdmin: string;
 }
 
 export interface OrganizacionEstadisticasDTO {

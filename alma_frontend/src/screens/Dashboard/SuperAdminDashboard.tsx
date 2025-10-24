@@ -21,12 +21,18 @@ import {
 
 const SuperAdminDashboard = ({navigation, handleLogout, isPasswordTemporary}: any) => {
 
+  const handleNavigation = (screen: string) => {
+    if (screen) {
+      navigation.navigate(screen);
+    }
+  };
+
   const actions = [
-    { icon: 'domain', text: 'Gestionar Organizaciones' },
-    { icon: 'account-supervisor-outline', text: 'Gestionar Usuarios' },
-    { icon: 'chart-bar', text: 'Estadísticas Globales' },
-    { icon: 'format-list-bulleted', text: 'Logs de Actividad' },
-    { icon: 'cog-outline', text: 'Mantenimiento' },
+    { icon: 'domain', text: 'Gestionar Organizaciones', screen: 'GestionOrganizaciones' },
+    { icon: 'account-supervisor-outline', text: 'Gestionar Usuarios', screen: '' }, // TODO: Implementar
+    { icon: 'chart-bar', text: 'Estadísticas Globales', screen: '' }, // TODO: Implementar
+    { icon: 'format-list-bulleted', text: 'Logs de Actividad', screen: 'Auditoria' },
+    { icon: 'cog-outline', text: 'Mantenimiento', screen: '' }, // TODO: Implementar
   ];
 
   return (
@@ -39,7 +45,7 @@ const SuperAdminDashboard = ({navigation, handleLogout, isPasswordTemporary}: an
         <Content>
           <Title>Panel del Super Administrador</Title>
           {actions.map((item, index) => (
-            <ActionButton key={index} onPress={() => {}}>
+            <ActionButton key={index} onPress={() => handleNavigation(item.screen)}>
               <Icon name={item.icon} size={24} color={theme.primaryGreen} />
               <ActionButtonText>{item.text}</ActionButtonText>
             </ActionButton>
