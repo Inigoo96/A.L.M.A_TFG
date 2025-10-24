@@ -5,6 +5,7 @@ import com.alma.alma_backend.dto.ResetPasswordRequestDTO;
 import com.alma.alma_backend.dto.UpdatePasswordRequest;
 import com.alma.alma_backend.dto.UsuarioResponseDTO;
 import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.OrganizacionRepository;
@@ -120,7 +121,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/{id}/reset-password")
-    @PreAuthorize("hasRole('ADMIN_ORGANIZACION')")
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')") // Corregido para aceptar ambos roles
     public ResponseEntity<?> resetPassword(@PathVariable Integer id, @Valid @RequestBody ResetPasswordRequestDTO request, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario administrador no encontrado"));
@@ -129,9 +130,11 @@ public class UsuarioController {
         Usuario usuarioAModificar = usuarioService.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        if (!Objects.equals(usuarioAModificar.getOrganizacion().getId(), adminOrgId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("No puede modificar usuarios de otra organización."));
-        }
+        // Un SUPER_ADMIN puede modificar cualquier usuario, un ADMIN_ORGANIZACION solo los de su organización
+        if (currentUser.getTipoUsuario().equals(TipoUsuario.ADMIN_ORGANIZACION))
+            if (!Objects.equals(usuarioAModificar.getOrganizacion().getId(), adminOrgId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("No puede modificar usuarios de otra organización."));
+            }
 
         usuarioAModificar.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         usuarioAModificar.setPasswordTemporal(true);
