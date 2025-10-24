@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface PacienteService {
 
-    Paciente save(Paciente paciente);
+    // Paciente save(Paciente paciente); // Eliminado para evitar duplicidad con updatePaciente y conflictos de compilación
 
     Optional<Paciente> findById(Integer id);
 

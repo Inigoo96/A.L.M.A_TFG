@@ -65,11 +65,6 @@ public class PacienteServiceImpl implements PacienteService {
     }
 
     @Override
-    public Paciente save(Paciente paciente) {
-        return pacienteRepository.save(paciente);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Optional<PacienteDetalleDTO> findDetalleById(Integer idPaciente) {
         logger.debug("Obteniendo detalle del paciente con ID: {}", idPaciente);

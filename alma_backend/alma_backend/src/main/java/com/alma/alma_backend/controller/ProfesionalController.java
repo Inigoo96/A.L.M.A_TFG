@@ -52,6 +52,7 @@ public class ProfesionalController {
      *
      * @deprecated Usar /mis-pacientes-detalle en su lugar para mejor rendimiento
      */
+    @Deprecated // Añadida la anotación @Deprecated
     @GetMapping("/mis-pacientes")
     public ResponseEntity<List<PacienteDTO>> getMisPacientes(Authentication authentication) {
         String userEmail = authentication.getName();
@@ -231,7 +232,7 @@ public class ProfesionalController {
         Integer idOrganizacion = usuario.getOrganizacion().getId();
 
         logger.info("Admin '{}' buscando profesionales por especialidad '{}' en organización ID: {}",
-                    userEmail, especialidad, idOrganizacion);
+                    userEmail, especialidad, idOrganizacion); // Corregido: especializacion -> especialidad
 
         List<ProfesionalDetalleDTO> profesionales =
             profesionalService.findByEspecialidadAndOrganizacion(especialidad, idOrganizacion);

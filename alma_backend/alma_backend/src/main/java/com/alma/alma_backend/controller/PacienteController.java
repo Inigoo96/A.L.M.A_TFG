@@ -38,12 +38,6 @@ public class PacienteController {
     @Autowired
     private AsignacionProfesionalPacienteRepository asignacionRepository;
 
-    @PostMapping
-    public ResponseEntity<PacienteResponseDTO> createPaciente(@RequestBody Paciente paciente) {
-        Paciente savedPaciente = pacienteService.save(paciente);
-        return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(savedPaciente));
-    }
-
     @GetMapping
     public ResponseEntity<List<PacienteResponseDTO>> getAllPacientes(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())

@@ -36,24 +36,6 @@ public class UsuarioController {
     @Autowired
     private OrganizacionRepository organizacionRepository;
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> createUsuario(@RequestBody Usuario usuario) {
-        if (usuario.getOrganizacion() == null || usuario.getOrganizacion().getId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El ID de la organización es obligatorio.");
-        }
-
-        Organizacion organizacion = organizacionRepository.findById(usuario.getOrganizacion().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("La organización especificada no existe."));
-
-        usuario.setOrganizacion(organizacion);
-        usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
-
-        Usuario savedUsuario = usuarioService.save(usuario);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapToDTO(savedUsuario));
-    }
-
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> getAllUsuarios(Authentication authentication) {
