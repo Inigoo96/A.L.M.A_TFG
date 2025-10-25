@@ -2,15 +2,12 @@ package com.alma.alma_backend.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
-// Solo se carga si el perfil activo es inigoDev o lauraDev
-@ConditionalOnExpression(
-        "'${spring.profiles.active}'=='inigoDev' or '${spring.profiles.active}'=='lauraDev'"
-)
+@Profile({"inigoDev", "lauraDev"})
 public class OpenApiConfig {
 
     @Bean
