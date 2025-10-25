@@ -14,11 +14,11 @@ public class LoggingAspect {
 
     private final AuditLogService auditLogService;
 
-    @Pointcut("within(@org.springframework.web.bind.annotation.RestController *)")
+    @Pointcut("within(com.alma.alma_backend.controller..*)")
     public void controllerBeans() {
     }
 
-    @Pointcut("within(@org.springframework.stereotype.Service *)")
+    @Pointcut("within(com.alma.alma_backend.service..*)")
     public void serviceBeans() {
     }
 

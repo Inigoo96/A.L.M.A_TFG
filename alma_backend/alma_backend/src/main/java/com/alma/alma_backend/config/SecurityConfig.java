@@ -34,6 +34,19 @@ import java.util.List;
 @PropertySource("classpath:application-security.properties")
 public class SecurityConfig {
 
+    private static final String[] SWAGGER_WHITELIST = {
+        "/swagger-ui.html",
+        "/swagger-ui/**",
+        "/v3/api-docs/**",
+        "/swagger-resources/**",
+        "/webjars/**"
+    };
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+        "/api/auth/**",
+        "/error"
+    };
+
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -53,12 +66,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            "/api/auth/**",
-                            "/swagger-ui/**",
-                            "/v3/api-docs/**",
-                            "/swagger-resources/**"
-                    ).permitAll()
+                    .requestMatchers(SWAGGER_WHITELIST).permitAll()
+                    .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                     .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception
