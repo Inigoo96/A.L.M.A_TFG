@@ -5,6 +5,7 @@ import com.alma.alma_backend.dto.PacienteUpdateRequestDTO;
 import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.PacienteRepository;
+import com.alma.alma_backend.mapper.PacienteMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -55,16 +56,7 @@ public class PacienteServiceImpl extends BaseService<Paciente, Integer> implemen
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
 
-        if (pacienteDetails.getFechaNacimiento() != null) {
-            paciente.setFechaNacimiento(pacienteDetails.getFechaNacimiento());
-        }
-        if (pacienteDetails.getGenero() != null) {
-            paciente.setGenero(pacienteDetails.getGenero());
-        }
-        if (pacienteDetails.getTarjetaSanitaria() != null && !pacienteDetails.getTarjetaSanitaria().isEmpty()) {
-            paciente.setTarjetaSanitaria(pacienteDetails.getTarjetaSanitaria());
-        }
-
+        PacienteMapper.applyUpdates(paciente, pacienteDetails);
         return pacienteRepository.save(paciente);
     }
 

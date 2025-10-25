@@ -1,13 +1,17 @@
 package com.alma.alma_backend.controller;
 
-import com.alma.alma_backend.dto.*;
-import com.alma.alma_backend.entity.*;
+import com.alma.alma_backend.dto.AsignacionRequestDTO;
+import com.alma.alma_backend.dto.AsignacionResponseDTO;
+import com.alma.alma_backend.entity.AsignacionProfesionalPaciente;
+import com.alma.alma_backend.entity.Paciente;
+import com.alma.alma_backend.entity.Profesional;
+import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.PacienteRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
 import com.alma.alma_backend.service.AsignacionProfesionalPacienteService;
 import com.alma.alma_backend.service.UsuarioService;
-import com.alma.alma_backend.mapper.UsuarioMapper;
+import com.alma.alma_backend.mapper.AsignacionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +68,7 @@ public class AsignacionProfesionalPacienteController {
         AsignacionProfesionalPaciente asignacionGuardada = asignacionService.save(nuevaAsignacion);
         logger.info("Admin '{}' creó la asignación ID {} entre profesional {} y paciente {}", currentUser.getEmail(), asignacionGuardada.getIdAsignacion(), profesional.getId(), paciente.getId());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapToAsignacionResponseDTO(asignacionGuardada));
+        return ResponseEntity.status(HttpStatus.CREATED).body(AsignacionMapper.toResponse(asignacionGuardada));
     }
 
     @GetMapping("/paciente/{pacienteId}")
@@ -75,7 +79,7 @@ public class AsignacionProfesionalPacienteController {
 
         logger.debug("Usuario '{}' consultando asignaciones del paciente ID {}", currentUser.getEmail(), pacienteId);
         List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByPacienteIdAndOrganizacionId(pacienteId, userOrgId);
-        List<AsignacionResponseDTO> dtos = asignaciones.stream().map(this::mapToAsignacionResponseDTO).collect(Collectors.toList());
+        List<AsignacionResponseDTO> dtos = asignaciones.stream().map(AsignacionMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
@@ -87,7 +91,7 @@ public class AsignacionProfesionalPacienteController {
 
         logger.debug("Usuario '{}' consultando asignaciones del profesional ID {}", currentUser.getEmail(), profesionalId);
         List<AsignacionProfesionalPaciente> asignaciones = asignacionService.findByProfesionalIdAndOrganizacionId(profesionalId, userOrgId);
-        List<AsignacionResponseDTO> dtos = asignaciones.stream().map(this::mapToAsignacionResponseDTO).collect(Collectors.toList());
+        List<AsignacionResponseDTO> dtos = asignaciones.stream().map(AsignacionMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
@@ -107,7 +111,7 @@ public class AsignacionProfesionalPacienteController {
 
         AsignacionProfesionalPaciente deactivatedAsignacion = asignacionService.deactivateAsignacion(id);
         logger.info("Admin '{}' desactivó la asignación ID {}", currentUser.getEmail(), id);
-        return ResponseEntity.ok(mapToAsignacionResponseDTO(deactivatedAsignacion));
+        return ResponseEntity.ok(AsignacionMapper.toResponse(deactivatedAsignacion));
     }
 
     @DeleteMapping("/{id}")
@@ -129,44 +133,4 @@ public class AsignacionProfesionalPacienteController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- Métodos de Mapeo a DTOs --- //
-
-    private AsignacionResponseDTO mapToAsignacionResponseDTO(AsignacionProfesionalPaciente asignacion) {
-        if (asignacion == null) return null;
-        AsignacionResponseDTO dto = new AsignacionResponseDTO();
-        dto.setId(asignacion.getIdAsignacion());
-        dto.setProfesional(mapToProfesionalResponseDTO(asignacion.getProfesional()));
-        dto.setPaciente(mapToPacienteResponseDTO(asignacion.getPaciente()));
-        dto.setFechaAsignacion(asignacion.getFechaAsignacion());
-        dto.setActiva(asignacion.getActivo());
-        dto.setEsPrincipal(asignacion.getEsPrincipal()); // CORREGIDO
-        return dto;
-    }
-
-    private ProfesionalResponseDTO mapToProfesionalResponseDTO(Profesional profesional) {
-        if (profesional == null) return null;
-        ProfesionalResponseDTO dto = new ProfesionalResponseDTO();
-        dto.setId(profesional.getId());
-        dto.setUsuario(mapToUsuarioResponseDTO(profesional.getUsuario()));
-        dto.setNumeroColegiado(profesional.getNumeroColegiado());
-        dto.setEspecialidad(profesional.getEspecialidad());
-        dto.setCentroSalud(profesional.getCentroSalud());
-        return dto;
-    }
-
-    private PacienteResponseDTO mapToPacienteResponseDTO(Paciente paciente) {
-        if (paciente == null) return null;
-        PacienteResponseDTO dto = new PacienteResponseDTO();
-        dto.setId(paciente.getId());
-        dto.setUsuario(mapToUsuarioResponseDTO(paciente.getUsuario()));
-        dto.setTarjetaSanitaria(paciente.getTarjetaSanitaria());
-        dto.setFechaNacimiento(paciente.getFechaNacimiento());
-        dto.setGenero(paciente.getGenero());
-        return dto;
-    }
-
-    private UsuarioResponseDTO mapToUsuarioResponseDTO(Usuario usuario) {
-        if (usuario == null) return null;
-        return UsuarioMapper.toResponse(usuario);
-    }
 }

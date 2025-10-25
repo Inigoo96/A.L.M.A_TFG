@@ -1,33 +1,33 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.MensajeChatRequestDTO;
-import com.alma.alma_backend.dto.MensajeChatResponseDTO;
 import com.alma.alma_backend.dto.SesionChatRequestDTO;
-import com.alma.alma_backend.dto.SesionChatResponseDTO;
+import com.alma.alma_backend.entity.MensajeChat;
+import com.alma.alma_backend.entity.SesionChat;
 
 import java.util.List;
 
 public interface ChatService {
 
-    SesionChatResponseDTO iniciarSesionChat(SesionChatRequestDTO request);
+    SesionChat iniciarSesionChat(SesionChatRequestDTO request);
 
-    SesionChatResponseDTO obtenerSesionPorId(Integer id);
+    SesionChat obtenerSesionPorId(Integer id);
 
-    SesionChatResponseDTO obtenerOCrearSesionActiva(Integer idPaciente, Integer idProfesional);
+    SesionChat obtenerOCrearSesionActiva(Integer idPaciente, Integer idProfesional);
 
-    List<SesionChatResponseDTO> obtenerSesionesPorPaciente(Integer idPaciente);
+    List<SesionChat> obtenerSesionesPorPaciente(Integer idPaciente);
 
-    List<SesionChatResponseDTO> obtenerSesionesPorProfesional(Integer idProfesional);
+    List<SesionChat> obtenerSesionesPorProfesional(Integer idProfesional);
 
-    List<SesionChatResponseDTO> obtenerSesionesActivas();
+    List<SesionChat> obtenerSesionesActivas();
 
-    SesionChatResponseDTO archivarSesion(Integer id);
+    SesionChat archivarSesion(Integer id);
 
-    MensajeChatResponseDTO enviarMensaje(MensajeChatRequestDTO request, Integer idRemitente);
+    MensajeChat enviarMensaje(MensajeChatRequestDTO request, Integer idRemitente);
 
-    List<MensajeChatResponseDTO> obtenerMensajesPorSesion(Integer idSesionChat);
+    List<MensajeChat> obtenerMensajesPorSesion(Integer idSesionChat);
 
-    MensajeChatResponseDTO marcarMensajeComoLeido(Integer idMensaje);
+    MensajeChat marcarMensajeComoLeido(Integer idMensaje);
 
     void marcarMensajesComoLeidos(Integer idSesionChat, Integer idUsuario);
 

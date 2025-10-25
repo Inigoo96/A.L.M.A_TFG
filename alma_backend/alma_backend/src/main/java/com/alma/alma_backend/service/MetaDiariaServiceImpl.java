@@ -3,7 +3,6 @@ package com.alma.alma_backend.service;
 import com.alma.alma_backend.dto.ActualizarMetaRequestDTO;
 import com.alma.alma_backend.dto.EstadisticasMetasDTO;
 import com.alma.alma_backend.dto.MetaDiariaRequestDTO;
-import com.alma.alma_backend.dto.MetaDiariaResponseDTO;
 import com.alma.alma_backend.entity.EstadoMeta;
 import com.alma.alma_backend.entity.MetaDiaria;
 import com.alma.alma_backend.entity.Paciente;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MetaDiariaServiceImpl implements MetaDiariaService {
@@ -30,7 +28,7 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
 
     @Override
     @Transactional
-    public MetaDiariaResponseDTO crearMeta(MetaDiariaRequestDTO request) {
+    public MetaDiaria crearMeta(MetaDiariaRequestDTO request) {
         Paciente paciente = pacienteRepository.findById(request.getIdPaciente())
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + request.getIdPaciente()));
 
@@ -54,44 +52,39 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
         meta.setEstado(EstadoMeta.PENDIENTE);
         meta.setNotas(request.getNotas());
 
-        MetaDiaria metaGuardada = metaRepository.save(meta);
-        return convertirADTO(metaGuardada);
+        return metaRepository.save(meta);
     }
 
     @Override
-    public MetaDiariaResponseDTO obtenerMetaPorId(Integer id) {
+    public MetaDiaria obtenerMetaPorId(Integer id) {
         MetaDiaria meta = metaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Meta no encontrada con id: " + id));
-        return convertirADTO(meta);
+        return meta;
     }
 
     @Override
-    public List<MetaDiariaResponseDTO> obtenerMetasPorPaciente(Integer idPaciente) {
-        List<MetaDiaria> metas = metaRepository.findByPacienteIdOrderByFechaAsignadaDesc(idPaciente);
-        return metas.stream().map(this::convertirADTO).collect(Collectors.toList());
+    public List<MetaDiaria> obtenerMetasPorPaciente(Integer idPaciente) {
+        return metaRepository.findByPacienteIdOrderByFechaAsignadaDesc(idPaciente);
     }
 
     @Override
-    public List<MetaDiariaResponseDTO> obtenerMetasHoyPorPaciente(Integer idPaciente) {
-        List<MetaDiaria> metas = metaRepository.findMetasHoyPorPaciente(idPaciente);
-        return metas.stream().map(this::convertirADTO).collect(Collectors.toList());
+    public List<MetaDiaria> obtenerMetasHoyPorPaciente(Integer idPaciente) {
+        return metaRepository.findMetasHoyPorPaciente(idPaciente);
     }
 
     @Override
-    public List<MetaDiariaResponseDTO> obtenerMetasEnRango(Integer idPaciente, LocalDate fechaInicio, LocalDate fechaFin) {
-        List<MetaDiaria> metas = metaRepository.findMetasEnRango(idPaciente, fechaInicio, fechaFin);
-        return metas.stream().map(this::convertirADTO).collect(Collectors.toList());
+    public List<MetaDiaria> obtenerMetasEnRango(Integer idPaciente, LocalDate fechaInicio, LocalDate fechaFin) {
+        return metaRepository.findMetasEnRango(idPaciente, fechaInicio, fechaFin);
     }
 
     @Override
-    public List<MetaDiariaResponseDTO> obtenerMetasPorEstado(Integer idPaciente, EstadoMeta estado) {
-        List<MetaDiaria> metas = metaRepository.findByPacienteIdAndEstadoOrderByFechaAsignadaDesc(idPaciente, estado);
-        return metas.stream().map(this::convertirADTO).collect(Collectors.toList());
+    public List<MetaDiaria> obtenerMetasPorEstado(Integer idPaciente, EstadoMeta estado) {
+        return metaRepository.findByPacienteIdAndEstadoOrderByFechaAsignadaDesc(idPaciente, estado);
     }
 
     @Override
     @Transactional
-    public MetaDiariaResponseDTO actualizarEstadoMeta(ActualizarMetaRequestDTO request) {
+    public MetaDiaria actualizarEstadoMeta(ActualizarMetaRequestDTO request) {
         MetaDiaria meta = metaRepository.findById(request.getIdMeta())
                 .orElseThrow(() -> new ResourceNotFoundException("Meta no encontrada con id: " + request.getIdMeta()));
 
@@ -101,13 +94,12 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
             meta.setNotas(request.getNotas());
         }
 
-        MetaDiaria metaGuardada = metaRepository.save(meta);
-        return convertirADTO(metaGuardada);
+        return metaRepository.save(meta);
     }
 
     @Override
     @Transactional
-    public MetaDiariaResponseDTO completarMeta(Integer idMeta, String notas) {
+    public MetaDiaria completarMeta(Integer idMeta, String notas) {
         MetaDiaria meta = metaRepository.findById(idMeta)
                 .orElseThrow(() -> new ResourceNotFoundException("Meta no encontrada con id: " + idMeta));
 
@@ -122,13 +114,12 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
             meta.setNotas(notas);
         }
 
-        MetaDiaria metaGuardada = metaRepository.save(meta);
-        return convertirADTO(metaGuardada);
+        return metaRepository.save(meta);
     }
 
     @Override
     @Transactional
-    public MetaDiariaResponseDTO cancelarMeta(Integer idMeta, String notas) {
+    public MetaDiaria cancelarMeta(Integer idMeta, String notas) {
         MetaDiaria meta = metaRepository.findById(idMeta)
                 .orElseThrow(() -> new ResourceNotFoundException("Meta no encontrada con id: " + idMeta));
 
@@ -138,13 +129,12 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
             meta.setNotas(notas);
         }
 
-        MetaDiaria metaGuardada = metaRepository.save(meta);
-        return convertirADTO(metaGuardada);
+        return metaRepository.save(meta);
     }
 
     @Override
     @Transactional
-    public MetaDiariaResponseDTO actualizarMeta(Integer id, MetaDiariaRequestDTO request) {
+    public MetaDiaria actualizarMeta(Integer id, MetaDiariaRequestDTO request) {
         MetaDiaria meta = metaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Meta no encontrada con id: " + id));
 
@@ -160,8 +150,7 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
             meta.setNotas(request.getNotas());
         }
 
-        MetaDiaria metaGuardada = metaRepository.save(meta);
-        return convertirADTO(metaGuardada);
+        return metaRepository.save(meta);
     }
 
     @Override
@@ -199,22 +188,5 @@ public class MetaDiariaServiceImpl implements MetaDiariaService {
                 metasCanceladas,
                 Math.round(porcentajeCompletado * 100.0) / 100.0
         );
-    }
-
-    // Método auxiliar privado
-
-    private MetaDiariaResponseDTO convertirADTO(MetaDiaria meta) {
-        MetaDiariaResponseDTO dto = new MetaDiariaResponseDTO();
-        dto.setId(meta.getId());
-        dto.setIdPaciente(meta.getPaciente().getId());
-        dto.setNombrePaciente(meta.getPaciente().getUsuario().getNombre() + " " +
-                             meta.getPaciente().getUsuario().getApellidos());
-        dto.setTextoMeta(meta.getTextoMeta());
-        dto.setFechaAsignada(meta.getFechaAsignada());
-        dto.setEstado(meta.getEstado());
-        dto.setNotas(meta.getNotas());
-        dto.setFechaCompletada(meta.getFechaCompletada());
-        dto.setFechaCreacion(meta.getFechaCreacion());
-        return dto;
     }
 }

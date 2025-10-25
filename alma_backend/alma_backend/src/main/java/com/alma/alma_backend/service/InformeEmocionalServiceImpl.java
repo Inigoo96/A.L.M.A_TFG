@@ -1,8 +1,10 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.InformeEmocionalRequestDTO;
-import com.alma.alma_backend.dto.InformeEmocionalResponseDTO;
-import com.alma.alma_backend.entity.*;
+import com.alma.alma_backend.entity.GeneradoPor;
+import com.alma.alma_backend.entity.InformeEmocional;
+import com.alma.alma_backend.entity.Paciente;
+import com.alma.alma_backend.entity.Profesional;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.InformeEmocionalRepository;
 import com.alma.alma_backend.repository.PacienteRepository;
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class InformeEmocionalServiceImpl implements InformeEmocionalService {
@@ -29,7 +30,7 @@ public class InformeEmocionalServiceImpl implements InformeEmocionalService {
     private ProfesionalRepository profesionalRepository;
 
     @Override
-    public InformeEmocionalResponseDTO generarInformeManual(InformeEmocionalRequestDTO request, Authentication authentication) {
+    public InformeEmocional generarInformeManual(InformeEmocionalRequestDTO request, Authentication authentication) {
         Paciente paciente = pacienteRepository.findById(request.getPacienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado"));
         Profesional profesional = profesionalRepository.findById(request.getProfesionalId())
@@ -47,36 +48,16 @@ public class InformeEmocionalServiceImpl implements InformeEmocionalService {
         contenido.put("resumen", "Informe generado manualmente.");
         informe.setContenidoInforme(contenido);
 
-        InformeEmocional savedInforme = informeEmocionalRepository.save(informe);
-        return mapToInformeEmocionalResponseDTO(savedInforme);
+        return informeEmocionalRepository.save(informe);
     }
 
     @Override
-    public List<InformeEmocionalResponseDTO> findInformesByPaciente(Integer pacienteId, Authentication authentication) {
-        return informeEmocionalRepository.findByPacienteIdOrderByFechaGeneracionDesc(pacienteId).stream()
-                .map(this::mapToInformeEmocionalResponseDTO)
-                .collect(Collectors.toList());
+    public List<InformeEmocional> findInformesByPaciente(Integer pacienteId, Authentication authentication) {
+        return informeEmocionalRepository.findByPacienteIdOrderByFechaGeneracionDesc(pacienteId);
     }
 
     @Override
-    public List<InformeEmocionalResponseDTO> findInformesByProfesional(Integer profesionalId, Authentication authentication) {
-        return informeEmocionalRepository.findByProfesionalIdOrderByFechaGeneracionDesc(profesionalId).stream()
-                .map(this::mapToInformeEmocionalResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    private InformeEmocionalResponseDTO mapToInformeEmocionalResponseDTO(InformeEmocional informe) {
-        InformeEmocionalResponseDTO dto = new InformeEmocionalResponseDTO();
-        dto.setId(informe.getId());
-        dto.setPacienteId(informe.getPaciente().getId());
-        dto.setNombrePaciente(informe.getPaciente().getUsuario().getNombre());
-        dto.setProfesionalId(informe.getProfesional().getId());
-        dto.setNombreProfesional(informe.getProfesional().getUsuario().getNombre());
-        dto.setPeriodoInicio(informe.getPeriodoInicio());
-        dto.setPeriodoFin(informe.getPeriodoFin());
-        dto.setContenidoInforme(informe.getContenidoInforme());
-        dto.setGeneradoPor(informe.getGeneradoPor());
-        dto.setFechaGeneracion(informe.getFechaGeneracion());
-        return dto;
+    public List<InformeEmocional> findInformesByProfesional(Integer profesionalId, Authentication authentication) {
+        return informeEmocionalRepository.findByProfesionalIdOrderByFechaGeneracionDesc(profesionalId);
     }
 }
