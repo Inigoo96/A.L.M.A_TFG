@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -36,4 +37,17 @@ public class Profesional {
     @OneToMany(mappedBy = "profesional", fetch = FetchType.LAZY)
     @JsonManagedReference("profesional-asignacion")
     private List<AsignacionProfesionalPaciente> asignaciones;
+
+    @Column(name = "fecha_ultima_modificacion")
+    private LocalDateTime fechaUltimaModificacion;
+
+    @PrePersist
+    protected void onCreate() {
+        fechaUltimaModificacion = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        fechaUltimaModificacion = LocalDateTime.now();
+    }
 }

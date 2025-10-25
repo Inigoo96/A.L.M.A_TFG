@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "ORGANIZACION")
 @Data
@@ -58,5 +60,18 @@ public class Organizacion {
     @Enumerated(EnumType.STRING)
     @Column(name = "ESTADO", nullable = false, length = 20)
     private EstadoOrganizacion estado = EstadoOrganizacion.ACTIVA;
+
+    @Column(name = "fecha_ultima_modificacion")
+    private LocalDateTime fechaUltimaModificacion;
+
+    @PrePersist
+    protected void onCreate() {
+        fechaUltimaModificacion = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        fechaUltimaModificacion = LocalDateTime.now();
+    }
 
 }
