@@ -26,7 +26,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         "/v3/api-docs",
         "/swagger-ui",
         "/swagger-resources",
-        "/webjars/swagger-ui"
+        "/webjars"
     );
 
     @Override
@@ -77,7 +77,6 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
     }
 
     private boolean isSwaggerRequest(ServerHttpRequest request) {
-        String path = request.getURI().getPath();
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpServletRequest servletHttpRequest = servletRequest.getServletRequest();
             if (servletHttpRequest != null) {
@@ -85,6 +84,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             }
         }
 
+        String path = request.getURI().getPath();
         return path != null && isSwaggerPath(path);
     }
 
@@ -92,7 +92,11 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         if (request == null) {
             return false;
         }
-        return isSwaggerPath(request.getRequestURI());
+        String requestURI = request.getRequestURI();
+        if (requestURI == null) {
+            return false;
+        }
+        return SWAGGER_PATH_PREFIXES.stream().anyMatch(requestURI::startsWith);
     }
 
     private boolean isSwaggerPath(String path) {
