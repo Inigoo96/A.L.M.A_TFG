@@ -21,7 +21,7 @@ public class Profesional {
     @Column(name = "ID_PROFESIONAL")
     private Integer id;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "ID_USUARIO", referencedColumnName = "ID_USUARIO", nullable = false, unique = true)
     private Usuario usuario; // DNI, Email, Teléfono están en Usuario
 

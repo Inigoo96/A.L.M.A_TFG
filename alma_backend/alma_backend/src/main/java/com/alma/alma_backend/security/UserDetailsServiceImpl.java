@@ -73,15 +73,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             "ROLE_" + usuario.getTipoUsuario().name()
         );
 
-        logger.debug("Usuario cargado exitosamente: {} con rol: {}",
-            usuario.getEmail(), usuario.getTipoUsuario().name());
+        boolean enabled = Boolean.TRUE.equals(usuario.getActivo());
+
+        logger.debug("Usuario cargado exitosamente: {} con rol: {} y estado activo: {}",
+            usuario.getEmail(), usuario.getTipoUsuario().name(), enabled);
 
         // Devolver un objeto User de Spring Security que implementa UserDetails
         // Contiene: email (username), contraseña hasheada y lista de roles/autoridades
         return new User(
             usuario.getEmail(),
             usuario.getPasswordHash(),
-            true, // enabled
+            enabled,
             true, // accountNonExpired
             true, // credentialsNonExpired
             true, // accountNonLocked
