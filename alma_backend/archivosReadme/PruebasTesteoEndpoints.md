@@ -27,21 +27,17 @@
   | POST /api/usuarios/{id}/reset-password | POST   | ✅ OK                    |
   | DELETE /api/usuarios/{id}              | DELETE | ⏭️ SKIP                 |
 
-  3. ⚠️ ORGANIZACION-CONTROLLER (4/7 - 57%)
+  3. ✅ ORGANIZACION-CONTROLLER (7/7 - 100%)
 
-  | Endpoint                                    | Método | Estado                                |
-  |---------------------------------------------|--------|---------------------------------------|
-  | GET /api/organizaciones                     | GET    | ✅ OK                                  |
-  | GET /api/organizaciones/{id}/estadisticas   | GET    | ✅ OK (Bug menor: no cuenta ADMIN_ORG) |
-  | GET /api/organizaciones/{id}/auditoria      | GET    | ✅ OK                                  |
-  | GET /api/organizaciones/auditoria/recientes | GET    | ⏭️ SKIP                               |
-  | PUT /api/organizaciones/{id}/suspender      | PUT    | ❌ ERROR 500                           |
-  | PUT /api/organizaciones/{id}/activar        | PUT    | ❌ ERROR 500                           |
-  | PUT /api/organizaciones/{id}/cambiar-estado | PUT    | ❌ NO PROBADO                          |
-
-  Bugs encontrados:
-  - ❌ Crítico: Error 500 al suspender/activar organizaciones
-  - ⚠️ Menor: Estadísticas no cuentan usuarios ADMIN_ORGANIZACION
+  | Endpoint                                    | Método | Estado   |
+  |---------------------------------------------|--------|----------|
+  | GET /api/organizaciones                     | GET    | ✅ OK     |
+  | GET /api/organizaciones/{id}/estadisticas   | GET    | ✅ OK     |
+  | GET /api/organizaciones/{id}/auditoria      | GET    | ✅ OK     |
+  | GET /api/organizaciones/auditoria/recientes | GET    | ⏭️ SKIP  |
+  | PUT /api/organizaciones/{id}/suspender      | PUT    | ✅ OK     |
+  | PUT /api/organizaciones/{id}/activar        | PUT    | ✅ OK     |
+  | PUT /api/organizaciones/{id}/dar-baja       | PUT    | ✅ OK     |
 
   4. ✅ PROFESIONAL-CONTROLLER (4/4 - 100%)
 
@@ -59,15 +55,12 @@
   | GET /api/pacientes      | GET    | ✅ OK   |
   | GET /api/pacientes/{id} | GET    | ✅ OK   |
 
-  6. ⚠️ ASIGNACION-CONTROLLER (1/2 - 50%)
+  6. ✅ ASIGNACION-CONTROLLER (2/2 - 100%)
 
-  | Endpoint                               | Método | Estado          |
-  |----------------------------------------|--------|-----------------|
-  | GET /api/asignaciones/profesional/{id} | GET    | ✅ OK            |
-  | GET /api/asignaciones/paciente/{id}    | GET    | ❌ 403 FORBIDDEN |
-
-  Bug encontrado:
-  - ❌ Medio: Paciente no puede ver sus propias asignaciones (403)
+  | Endpoint                               | Método | Estado |
+  |----------------------------------------|--------|--------|
+  | GET /api/asignaciones/profesional/{id} | GET    | ✅ OK   |
+  | GET /api/asignaciones/paciente/{id}    | GET    | ✅ OK   |
 
   7. ⚠️ CITA-CONTROLLER (1/2 - 50%)
 
