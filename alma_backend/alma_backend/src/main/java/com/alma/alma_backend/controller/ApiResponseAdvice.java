@@ -30,7 +30,8 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         "/v3/api-docs",
         "/swagger-resources",
         "/webjars",
-        "/error"
+        "/error",
+            "/v3/api-docs/swagger-config"
     );
     private static final String WRAPPED_ATTRIBUTE = ApiResponseAdvice.class.getName() + ".WRAPPED";
     private static final String ERROR_URI_ATTRIBUTE = "jakarta.servlet.error.request_uri";
