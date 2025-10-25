@@ -39,18 +39,24 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             "/webjars/**"
     ).map(PATH_PATTERN_PARSER::parse).toList();
     private static final String SPRINGDOC_PACKAGE_PREFIX = "org.springdoc";
+    private static final String CONTROLLER_PACKAGE_PREFIX = "com.alma.alma_backend";
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
         Class<?> controllerClass = returnType.getContainingClass();
 
-        if (controllerClass != null) {
-            if (BasicErrorController.class.isAssignableFrom(controllerClass) || ResponseEntityExceptionHandler.class.isAssignableFrom(controllerClass)) {
-                return false;
-            }
-            if (controllerClass.getPackageName().startsWith(SPRINGDOC_PACKAGE_PREFIX)) {
-                return false;
-            }
+        if (controllerClass == null) {
+            return false;
+        }
+
+        if (!controllerClass.getPackageName().startsWith(CONTROLLER_PACKAGE_PREFIX)) {
+            return false;
+        }
+
+        if (BasicErrorController.class.isAssignableFrom(controllerClass) ||
+                ResponseEntityExceptionHandler.class.isAssignableFrom(controllerClass) ||
+                controllerClass.getPackageName().startsWith(SPRINGDOC_PACKAGE_PREFIX)) {
+            return false;
         }
 
         if (isSwaggerRequest()) {
@@ -67,7 +73,7 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request,
                                   ServerHttpResponse response) {
-        if (isSwaggerRequest()) {
+        if (isSwaggerRequest(request)) {
             return body;
         }
 
@@ -95,6 +101,16 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         if (requestAttributes instanceof ServletRequestAttributes servletAttributes) {
             return isSwaggerPath(servletAttributes.getRequest());
+        }
+        return false;
+    }
+
+    private boolean isSwaggerRequest(ServerHttpRequest request) {
+        if (request instanceof org.springframework.http.server.ServletServerHttpRequest servletServerHttpRequest) {
+            return isSwaggerPath(servletServerHttpRequest.getServletRequest());
+        }
+        if (request != null) {
+            return isSwaggerPath(request.getURI().getPath());
         }
         return false;
     }
