@@ -43,7 +43,7 @@ public class MetaDiaria {
     @Column(name = "FECHA_CREACION", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "FECHA_ULTIMA_MODIFICACION")
+    @Column(name = "fecha_ultima_modificacion")
     private LocalDateTime fechaUltimaModificacion;
 
     @PrePersist

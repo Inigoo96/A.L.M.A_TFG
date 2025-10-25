@@ -39,9 +39,12 @@ public class AsignacionProfesionalPaciente {
     @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime fechaAsignacion;
 
-    @Column(name = "ACTIVO")
+    @Column(name = "activo", nullable = false)
     @ColumnDefault("true")
     private Boolean activo;
+
+    @Column(name = "fecha_ultima_modificacion")
+    private LocalDateTime fechaUltimaModificacion;
 
     @PrePersist
     protected void onCreate() {
@@ -54,5 +57,13 @@ public class AsignacionProfesionalPaciente {
         if (activo == null) {
             activo = true;
         }
+        if (fechaUltimaModificacion == null) {
+            fechaUltimaModificacion = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        fechaUltimaModificacion = LocalDateTime.now();
     }
 }
