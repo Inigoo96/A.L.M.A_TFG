@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -71,6 +72,7 @@ public class SesionInteraccion {
 
     // Relación con mensajes de IA
     @OneToMany(mappedBy = "sesion", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonManagedReference("sesion-interaccion-mensajes")
     private List<MensajeIA> mensajes = new ArrayList<>();
 
     @PrePersist

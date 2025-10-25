@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class ProgresoDuelo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_FASE_DUELO", nullable = false)
+    @JsonBackReference("fase-duelo-progresos")
     private FaseDuelo faseDuelo;
 
     @Enumerated(EnumType.STRING)

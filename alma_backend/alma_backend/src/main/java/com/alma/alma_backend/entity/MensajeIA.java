@@ -1,6 +1,6 @@
 package com.alma.alma_backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +22,7 @@ public class MensajeIA {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_SESION", nullable = false)
-    @JsonIgnore
+    @JsonBackReference("sesion-interaccion-mensajes")
     private SesionInteraccion sesion;
 
     @Enumerated(EnumType.STRING)
