@@ -1,6 +1,7 @@
 package com.alma.alma_backend.controller;
 
 import com.alma.alma_backend.dto.PacienteResponseDTO;
+import com.alma.alma_backend.dto.PacienteUpdateRequestDTO;
 import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
@@ -9,7 +10,10 @@ import com.alma.alma_backend.repository.AsignacionProfesionalPacienteRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
 import com.alma.alma_backend.service.PacienteService;
 import com.alma.alma_backend.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,21 +28,17 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/pacientes")
 @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'PROFESIONAL', 'SUPER_ADMIN')")
+@RequiredArgsConstructor
 public class PacienteController {
 
-    @Autowired
-    private PacienteService pacienteService;
-
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private ProfesionalRepository profesionalRepository;
-
-    @Autowired
-    private AsignacionProfesionalPacienteRepository asignacionRepository;
+    private final PacienteService pacienteService;
+    private final UsuarioService usuarioService;
+    private final ProfesionalRepository profesionalRepository;
+    private final AsignacionProfesionalPacienteRepository asignacionRepository;
 
     @GetMapping
+    @Operation(summary = "Listar pacientes visibles para el usuario autenticado")
+    @ApiResponse(responseCode = "200", description = "Pacientes recuperados correctamente")
     public ResponseEntity<List<PacienteResponseDTO>> getAllPacientes(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -55,6 +55,7 @@ public class PacienteController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener un paciente por ID si pertenece a la organización")
     public ResponseEntity<PacienteResponseDTO> getPacienteById(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -85,6 +86,7 @@ public class PacienteController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
+    @Operation(summary = "Obtener un paciente por el ID de usuario asociado")
     public ResponseEntity<PacienteResponseDTO> getPacienteByUsuarioId(@PathVariable Integer usuarioId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -102,7 +104,11 @@ public class PacienteController {
 
     // CORREGIDO: Se elimina el try-catch para dejar que el GlobalExceptionHandler actúe.
     @PutMapping("/{id}")
-    public ResponseEntity<PacienteResponseDTO> updatePaciente(@PathVariable Integer id, @RequestBody Paciente pacienteDetails, Authentication authentication) {
+    @Operation(summary = "Actualizar parcialmente datos de un paciente")
+    @ApiResponse(responseCode = "200", description = "Paciente actualizado correctamente")
+    public ResponseEntity<PacienteResponseDTO> updatePaciente(@PathVariable Integer id,
+                                                              @Valid @RequestBody PacienteUpdateRequestDTO pacienteDetails,
+                                                              Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();

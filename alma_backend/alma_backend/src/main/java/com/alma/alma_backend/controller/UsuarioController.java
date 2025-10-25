@@ -4,14 +4,15 @@ import com.alma.alma_backend.dto.ErrorResponse;
 import com.alma.alma_backend.dto.ResetPasswordRequestDTO;
 import com.alma.alma_backend.dto.UpdatePasswordRequest;
 import com.alma.alma_backend.dto.UsuarioResponseDTO;
-import com.alma.alma_backend.entity.Organizacion;
+import com.alma.alma_backend.dto.UsuarioUpdateRequestDTO;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
-import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.service.UsuarioService;
+import com.alma.alma_backend.mapper.UsuarioMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,17 +29,18 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private OrganizacionRepository organizacionRepository;
+    private final UsuarioService usuarioService;
+    private final PasswordEncoder passwordEncoder;
+    public UsuarioController(UsuarioService usuarioService,
+                             PasswordEncoder passwordEncoder) {
+        this.usuarioService = usuarioService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
+    @Operation(summary = "Listar usuarios de la organización actual")
+    @ApiResponse(responseCode = "200", description = "Usuarios recuperados correctamente")
     public ResponseEntity<List<UsuarioResponseDTO>> getAllUsuarios(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -54,6 +56,8 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
+    @Operation(summary = "Obtener detalles de un usuario por ID")
+    @ApiResponse(responseCode = "200", description = "Usuario encontrado")
     public ResponseEntity<UsuarioResponseDTO> getUsuarioById(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -71,7 +75,11 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
-    public ResponseEntity<UsuarioResponseDTO> updateUsuario(@PathVariable Integer id, @RequestBody Usuario usuarioDetails, Authentication authentication) {
+    @Operation(summary = "Actualizar parcialmente un usuario", description = "Solo campos presentes en el cuerpo serán modificados")
+    @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente")
+    public ResponseEntity<UsuarioResponseDTO> updateUsuario(@PathVariable Integer id,
+                                                            @Valid @RequestBody UsuarioUpdateRequestDTO usuarioDetails,
+                                                            Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();
@@ -144,26 +152,6 @@ public class UsuarioController {
     }
 
     private UsuarioResponseDTO mapToDTO(Usuario usuario) {
-        if (usuario == null) {
-            return null;
-        }
-
-        UsuarioResponseDTO dto = new UsuarioResponseDTO();
-        dto.setId(usuario.getId());
-        dto.setDni(usuario.getDni());
-        dto.setEmail(usuario.getEmail());
-        dto.setNombre(usuario.getNombre());
-        dto.setApellidos(usuario.getApellidos());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setTipoUsuario(usuario.getTipoUsuario());
-        dto.setOrganizacion(usuario.getOrganizacion());
-        dto.setActivo(usuario.getActivo());
-        dto.setFechaRegistro(usuario.getFechaRegistro());
-        dto.setUltimoAcceso(usuario.getUltimoAcceso());
-        dto.setPasswordTemporal(usuario.getPasswordTemporal());
-        dto.setCargo(usuario.getCargo());
-        dto.setDocumentoCargoUrl(usuario.getDocumentoCargoUrl());
-
-        return dto;
+        return UsuarioMapper.toResponse(usuario);
     }
 }

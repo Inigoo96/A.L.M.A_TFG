@@ -3,17 +3,23 @@ package com.alma.alma_backend.controller;
 import com.alma.alma_backend.dto.AuditoriaDTO;
 import com.alma.alma_backend.dto.CambioEstadoOrganizacionDTO;
 import com.alma.alma_backend.dto.OrganizacionEstadisticasDTO;
+import com.alma.alma_backend.dto.OrganizacionRequestDTO;
+import com.alma.alma_backend.dto.OrganizacionResponseDTO;
 import com.alma.alma_backend.entity.AuditoriaAdmin;
 import com.alma.alma_backend.entity.EstadoOrganizacion;
 import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.mapper.OrganizacionMapper;
 import com.alma.alma_backend.service.AuditoriaAdminService;
 import com.alma.alma_backend.service.OrganizacionService;
 import com.alma.alma_backend.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,57 +31,72 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/organizaciones")
+@RequiredArgsConstructor
 public class OrganizacionController {
 
     private static final Logger logger = LoggerFactory.getLogger(OrganizacionController.class);
 
-    @Autowired
-    private OrganizacionService organizacionService;
-
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private AuditoriaAdminService auditoriaAdminService;
+    private final OrganizacionService organizacionService;
+    private final UsuarioService usuarioService;
+    private final AuditoriaAdminService auditoriaAdminService;
 
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> createOrganizacion(@RequestBody Organizacion organizacion) {
+    @Operation(summary = "Registrar una nueva organización")
+    @ApiResponse(responseCode = "200", description = "Organización creada")
+    public ResponseEntity<OrganizacionResponseDTO> createOrganizacion(@Valid @RequestBody OrganizacionRequestDTO request) {
         logger.info("Admin creando una nueva organización");
-        return ResponseEntity.ok(organizacionService.save(organizacion));
+        Organizacion nuevaOrganizacion = OrganizacionMapper.fromRequest(request);
+        Organizacion guardada = organizacionService.save(nuevaOrganizacion);
+        return ResponseEntity.ok(OrganizacionMapper.toResponse(guardada));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
-    public ResponseEntity<List<Organizacion>> getAllOrganizaciones() {
+    @Operation(summary = "Listar organizaciones")
+    @ApiResponse(responseCode = "200", description = "Organizaciones recuperadas")
+    public ResponseEntity<List<OrganizacionResponseDTO>> getAllOrganizaciones() {
         logger.info("Solicitando todas las organizaciones");
-        return ResponseEntity.ok(organizacionService.findAll());
+        List<OrganizacionResponseDTO> response = organizacionService.findAll().stream()
+                .map(OrganizacionMapper::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> getOrganizacionById(@PathVariable Integer id) {
+    @Operation(summary = "Consultar una organización por ID")
+    @ApiResponse(responseCode = "200", description = "Organización encontrada")
+    public ResponseEntity<OrganizacionResponseDTO> getOrganizacionById(@PathVariable Integer id) {
         logger.info("Solicitando organización por ID: {}", id);
         return organizacionService.findById(id)
+                .map(OrganizacionMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cif/{cif}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> getOrganizacionByCif(@PathVariable String cif) {
+    @Operation(summary = "Consultar una organización por CIF")
+    @ApiResponse(responseCode = "200", description = "Organización encontrada")
+    public ResponseEntity<OrganizacionResponseDTO> getOrganizacionByCif(@PathVariable String cif) {
         logger.info("Solicitando organización por CIF: {}", cif);
         return organizacionService.findByCif(cif)
+                .map(OrganizacionMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> updateOrganizacion(@PathVariable Integer id, @RequestBody Organizacion organizacionDetails) {
+    @Operation(summary = "Actualizar datos básicos de una organización")
+    @ApiResponse(responseCode = "200", description = "Organización actualizada")
+    public ResponseEntity<OrganizacionResponseDTO> updateOrganizacion(@PathVariable Integer id,
+                                                                      @Valid @RequestBody OrganizacionRequestDTO organizacionDetails) {
         logger.info("Admin actualizando organización ID: {}", id);
         try {
-            return ResponseEntity.ok(organizacionService.updateOrganizacion(id, organizacionDetails));
+            Organizacion updated = organizacionService.updateOrganizacion(id, organizacionDetails);
+            return ResponseEntity.ok(OrganizacionMapper.toResponse(updated));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -83,6 +104,8 @@ public class OrganizacionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @Operation(summary = "Eliminar lógicamente una organización")
+    @ApiResponse(responseCode = "204", description = "Organización eliminada")
     public ResponseEntity<Void> deleteOrganizacion(@PathVariable Integer id) {
         logger.info("Admin eliminando organización ID: {}", id);
         organizacionService.deleteById(id);
@@ -127,7 +150,7 @@ public class OrganizacionController {
      */
     @PutMapping("/{id}/suspender")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> suspenderOrganizacion(
+    public ResponseEntity<OrganizacionResponseDTO> suspenderOrganizacion(
             @PathVariable Integer id,
             @RequestBody CambioEstadoOrganizacionDTO cambioEstadoDTO,
             Authentication authentication,
@@ -152,7 +175,7 @@ public class OrganizacionController {
             );
 
             logger.info("Organización ID: {} suspendida exitosamente", id);
-            return ResponseEntity.ok(organizacionSuspendida);
+            return ResponseEntity.ok(OrganizacionMapper.toResponse(organizacionSuspendida));
 
         } catch (RuntimeException e) {
             logger.error("Error al suspender organización ID: {}", id, e);
@@ -165,7 +188,7 @@ public class OrganizacionController {
      */
     @PutMapping("/{id}/activar")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> activarOrganizacion(
+    public ResponseEntity<OrganizacionResponseDTO> activarOrganizacion(
             @PathVariable Integer id,
             @RequestBody CambioEstadoOrganizacionDTO cambioEstadoDTO,
             Authentication authentication,
@@ -190,7 +213,7 @@ public class OrganizacionController {
             );
 
             logger.info("Organización ID: {} activada exitosamente", id);
-            return ResponseEntity.ok(organizacionActivada);
+            return ResponseEntity.ok(OrganizacionMapper.toResponse(organizacionActivada));
 
         } catch (RuntimeException e) {
             logger.error("Error al activar organización ID: {}", id, e);
@@ -204,7 +227,7 @@ public class OrganizacionController {
      */
     @PutMapping("/{id}/dar-baja")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> darDeBajaOrganizacion(
+    public ResponseEntity<OrganizacionResponseDTO> darDeBajaOrganizacion(
             @PathVariable Integer id,
             @RequestBody CambioEstadoOrganizacionDTO cambioEstadoDTO,
             Authentication authentication,
@@ -236,7 +259,7 @@ public class OrganizacionController {
             );
 
             logger.warn("Organización ID: {} dada de baja definitivamente. Estado cambiado a BAJA.", id);
-            return ResponseEntity.ok(organizacionBaja);
+            return ResponseEntity.ok(OrganizacionMapper.toResponse(organizacionBaja));
 
         } catch (RuntimeException e) {
             logger.error("Error al dar de baja organización ID: {}", id, e);
@@ -249,7 +272,7 @@ public class OrganizacionController {
      */
     @PutMapping("/{id}/cambiar-estado")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Organizacion> cambiarEstadoOrganizacion(
+    public ResponseEntity<OrganizacionResponseDTO> cambiarEstadoOrganizacion(
             @PathVariable Integer id,
             @RequestBody CambioEstadoOrganizacionDTO cambioEstadoDTO,
             Authentication authentication,
@@ -281,7 +304,7 @@ public class OrganizacionController {
             );
 
             logger.info("Estado de organización ID: {} cambiado exitosamente a {}", id, cambioEstadoDTO.getNuevoEstado());
-            return ResponseEntity.ok(organizacionActualizada);
+            return ResponseEntity.ok(OrganizacionMapper.toResponse(organizacionActualizada));
 
         } catch (RuntimeException e) {
             logger.error("Error al cambiar estado de organización ID: {}", id, e);
@@ -294,9 +317,11 @@ public class OrganizacionController {
      */
     @GetMapping("/estado/{estado}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Organizacion>> getOrganizacionesByEstado(@PathVariable EstadoOrganizacion estado) {
+    public ResponseEntity<List<OrganizacionResponseDTO>> getOrganizacionesByEstado(@PathVariable EstadoOrganizacion estado) {
         logger.info("Solicitando organizaciones con estado: {}", estado);
-        List<Organizacion> organizaciones = organizacionService.findByEstado(estado);
+        List<OrganizacionResponseDTO> organizaciones = organizacionService.findByEstado(estado).stream()
+                .map(OrganizacionMapper::toResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(organizaciones);
     }
 

@@ -5,9 +5,12 @@ import com.alma.alma_backend.dto.PacienteRegistroDTO;
 import com.alma.alma_backend.dto.ProfesionalRegistroDTO;
 import com.alma.alma_backend.dto.UsuarioResponseDTO;
 import com.alma.alma_backend.entity.*;
+import com.alma.alma_backend.mapper.UsuarioMapper;
 import com.alma.alma_backend.repository.*;
 import com.alma.alma_backend.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final OrganizacionRepository organizacionRepository;
     private final UsuarioRepository usuarioRepository;
@@ -137,7 +142,7 @@ public class AuthServiceImpl implements AuthService {
 
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
         nuevoUsuario.setPasswordHash(passwordEncoder.encode(tempPassword));
-        System.out.println("Contraseña temporal para " + nuevoUsuario.getEmail() + ": " + tempPassword);
+        logger.info("Contraseña temporal generada para {}", nuevoUsuario.getEmail());
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
@@ -190,7 +195,7 @@ public class AuthServiceImpl implements AuthService {
 
         String tempPassword = UUID.randomUUID().toString().substring(0, 8);
         nuevoUsuario.setPasswordHash(passwordEncoder.encode(tempPassword));
-        System.out.println("Contraseña temporal para " + nuevoUsuario.getEmail() + ": " + tempPassword);
+        logger.info("Contraseña temporal generada para {}", nuevoUsuario.getEmail());
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
@@ -207,21 +212,6 @@ public class AuthServiceImpl implements AuthService {
 
     private UsuarioResponseDTO mapToUsuarioResponseDTO(Usuario usuario) {
         if (usuario == null) return null;
-        UsuarioResponseDTO dto = new UsuarioResponseDTO();
-        dto.setId(usuario.getId());
-        dto.setDni(usuario.getDni());
-        dto.setEmail(usuario.getEmail());
-        dto.setNombre(usuario.getNombre());
-        dto.setApellidos(usuario.getApellidos());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setTipoUsuario(usuario.getTipoUsuario());
-        dto.setOrganizacion(usuario.getOrganizacion());
-        dto.setActivo(usuario.getActivo());
-        dto.setFechaRegistro(usuario.getFechaRegistro());
-        dto.setUltimoAcceso(usuario.getUltimoAcceso());
-        dto.setPasswordTemporal(usuario.getPasswordTemporal());
-        dto.setCargo(usuario.getCargo());
-        dto.setDocumentoCargoUrl(usuario.getDocumentoCargoUrl());
-        return dto;
+        return UsuarioMapper.toResponse(usuario);
     }
 }

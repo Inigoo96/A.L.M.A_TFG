@@ -7,6 +7,7 @@ import com.alma.alma_backend.repository.PacienteRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
 import com.alma.alma_backend.service.AsignacionProfesionalPacienteService;
 import com.alma.alma_backend.service.UsuarioService;
+import com.alma.alma_backend.mapper.UsuarioMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,21 +167,6 @@ public class AsignacionProfesionalPacienteController {
 
     private UsuarioResponseDTO mapToUsuarioResponseDTO(Usuario usuario) {
         if (usuario == null) return null;
-        UsuarioResponseDTO dto = new UsuarioResponseDTO();
-        dto.setId(usuario.getId());
-        dto.setDni(usuario.getDni());
-        dto.setEmail(usuario.getEmail());
-        dto.setNombre(usuario.getNombre());
-        dto.setApellidos(usuario.getApellidos());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setTipoUsuario(usuario.getTipoUsuario());
-        dto.setOrganizacion(usuario.getOrganizacion());
-        dto.setActivo(usuario.getActivo());
-        dto.setFechaRegistro(usuario.getFechaRegistro());
-        dto.setUltimoAcceso(usuario.getUltimoAcceso());
-        dto.setPasswordTemporal(usuario.getPasswordTemporal());
-        dto.setCargo(usuario.getCargo());
-        dto.setDocumentoCargoUrl(usuario.getDocumentoCargoUrl());
-        return dto;
+        return UsuarioMapper.toResponse(usuario);
     }
 }

@@ -1,12 +1,12 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.PacienteDetalleDTO;
+import com.alma.alma_backend.dto.PacienteUpdateRequestDTO;
 import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.PacienteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,16 +14,20 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class PacienteServiceImpl implements PacienteService {
+public class PacienteServiceImpl extends BaseService<Paciente, Integer> implements PacienteService {
 
     private static final Logger logger = LoggerFactory.getLogger(PacienteServiceImpl.class);
 
-    @Autowired
-    private PacienteRepository pacienteRepository;
+    private final PacienteRepository pacienteRepository;
+
+    public PacienteServiceImpl(PacienteRepository pacienteRepository) {
+        super(pacienteRepository);
+        this.pacienteRepository = pacienteRepository;
+    }
 
     @Override
     public Optional<Paciente> findById(Integer id) {
-        return pacienteRepository.findById(id);
+        return super.findById(id);
     }
 
     @Override
@@ -33,7 +37,7 @@ public class PacienteServiceImpl implements PacienteService {
 
     @Override
     public List<Paciente> findAll() {
-        return pacienteRepository.findAll();
+        return super.findAll();
     }
 
     @Override
@@ -43,11 +47,11 @@ public class PacienteServiceImpl implements PacienteService {
 
     @Override
     public void deleteById(Integer id) {
-        pacienteRepository.deleteById(id);
+        super.deleteById(id);
     }
 
     @Override
-    public Paciente updatePaciente(Integer id, Paciente pacienteDetails) {
+    public Paciente updatePaciente(Integer id, PacienteUpdateRequestDTO pacienteDetails) {
         Paciente paciente = pacienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
 
