@@ -21,10 +21,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.Map;
 import java.util.Set;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = ApiResponseAdvice.APPLICATION_CONTROLLER_PACKAGE)
 public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
-    private static final String APPLICATION_CONTROLLER_PACKAGE = "com.alma.alma_backend.controller";
+    public static final String APPLICATION_CONTROLLER_PACKAGE = "com.alma.alma_backend.controller";
     private static final Set<String> FRAMEWORK_PATH_PREFIXES = Set.of(
         "/swagger-ui",
         "/v3/api-docs",
@@ -43,11 +43,8 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             return false;
         }
 
-        if (!controllerClass.getPackageName().startsWith(APPLICATION_CONTROLLER_PACKAGE)) {
-            return false;
-        }
-
-        if (BasicErrorController.class.isAssignableFrom(controllerClass) ||
+        if (!controllerClass.getPackageName().startsWith(APPLICATION_CONTROLLER_PACKAGE) ||
+                BasicErrorController.class.isAssignableFrom(controllerClass) ||
                 ResponseEntityExceptionHandler.class.isAssignableFrom(controllerClass)) {
             return false;
         }

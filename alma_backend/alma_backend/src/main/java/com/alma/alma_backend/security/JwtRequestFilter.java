@@ -143,7 +143,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // No filtrar solo endpoints de autenticación públicos y recursos públicos
         return path.startsWith("/api/auth/") ||
                path.startsWith("/swagger-ui") ||
-               path.startsWith("/v3/api-docs");
+               path.startsWith("/v3/api-docs") ||
+               path.startsWith("/swagger-resources") ||
+               path.startsWith("/webjars") ||
+               path.equals("/error");
     }
 
     private void writeUnauthorizedResponse(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
