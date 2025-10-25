@@ -2,6 +2,7 @@ package com.alma.alma_backend.repository;
 
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,6 +21,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
      * @param email El email del usuario
      * @return Optional con el usuario si existe
      */
+    @EntityGraph(attributePaths = "organizacion")
     Optional<Usuario> findByEmail(String email);
 
     /**

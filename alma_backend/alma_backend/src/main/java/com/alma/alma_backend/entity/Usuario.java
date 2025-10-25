@@ -42,7 +42,7 @@ public class Usuario {
     @Column(name = "TIPO_USUARIO", nullable = false, length = 20)
     private TipoUsuario tipoUsuario;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_ORGANIZACION", nullable = false)
     private Organizacion organizacion;
 

@@ -1,17 +1,30 @@
 package com.alma.alma_backend.service;
 
+import com.alma.alma_backend.dto.AuthenticationRequest;
+import com.alma.alma_backend.dto.AuthenticationResponse;
 import com.alma.alma_backend.dto.OrganizacionRegistroDTO;
 import com.alma.alma_backend.dto.PacienteRegistroDTO;
 import com.alma.alma_backend.dto.ProfesionalRegistroDTO;
 import com.alma.alma_backend.entity.*;
+import com.alma.alma_backend.logging.AuditLogService;
 import com.alma.alma_backend.repository.*;
+import com.alma.alma_backend.security.JwtUtil;
 import com.alma.alma_backend.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,6 +40,10 @@ public class AuthServiceImpl implements AuthService {
     private final ProfesionalRepository profesionalRepository;
     private final PacienteRepository pacienteRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final UserDetailsService userDetailsService;
+    private final JwtUtil jwtUtil;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -205,5 +222,43 @@ public class AuthServiceImpl implements AuthService {
         pacienteRepository.save(nuevoPaciente);
 
         return usuarioGuardado;
+    }
+
+    @Override
+    @Transactional
+    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
+        String normalizedEmail = authenticationRequest.getEmail().toLowerCase().trim();
+        try {
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(normalizedEmail, authenticationRequest.getPassword())
+            );
+        } catch (BadCredentialsException ex) {
+            auditLogService.logSecurityWarn("Intento de inicio de sesión con credenciales inválidas para {}", normalizedEmail);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos", ex);
+        } catch (DisabledException ex) {
+            auditLogService.logSecurityWarn("Intento de inicio de sesión en cuenta deshabilitada: {}", normalizedEmail);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La cuenta está deshabilitada", ex);
+        } catch (LockedException ex) {
+            auditLogService.logSecurityWarn("Intento de inicio de sesión en cuenta bloqueada: {}", normalizedEmail);
+            throw new ResponseStatusException(HttpStatus.LOCKED, "La cuenta está bloqueada", ex);
+        }
+
+        Usuario usuario = usuarioRepository.findByEmail(normalizedEmail)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
+
+        if (!Boolean.TRUE.equals(usuario.getActivo())) {
+            auditLogService.logSecurityWarn("Usuario {} intentó iniciar sesión estando inactivo", normalizedEmail);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La cuenta está deshabilitada");
+        }
+
+        usuario.setUltimoAcceso(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
+        String jwt = jwtUtil.generateToken(userDetails);
+
+        auditLogService.logAuthWarn("Usuario autenticado: {}", normalizedEmail);
+
+        return new AuthenticationResponse(jwt, usuario.getEmail(), usuario.getTipoUsuario().name(), usuario.getPasswordTemporal());
     }
 }

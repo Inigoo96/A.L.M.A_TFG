@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -25,13 +26,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @PropertySource("classpath:application-security.properties")
+@EnableConfigurationProperties(SecurityCorsProperties.class)
 public class SecurityConfig {
 
     private static final String[] SWAGGER_WHITELIST = {
@@ -50,14 +49,17 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final SecurityCorsProperties securityCorsProperties;
 
     @Autowired
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
                          JwtRequestFilter jwtRequestFilter,
-                         JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
+                         JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                         SecurityCorsProperties securityCorsProperties) {
         this.userDetailsService = userDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.securityCorsProperties = securityCorsProperties;
     }
 
     @Bean
@@ -90,12 +92,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:4200"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+        configuration.setAllowedOrigins(securityCorsProperties.getAllowedOrigins());
+        configuration.setAllowedMethods(securityCorsProperties.getAllowedMethods());
+        configuration.setAllowedHeaders(securityCorsProperties.getAllowedHeaders());
+        configuration.setExposedHeaders(securityCorsProperties.getExposedHeaders());
+        configuration.setAllowCredentials(securityCorsProperties.isAllowCredentials());
+        configuration.setMaxAge(securityCorsProperties.getMaxAge());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
