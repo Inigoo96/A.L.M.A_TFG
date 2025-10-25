@@ -9,6 +9,7 @@ import com.alma.alma_backend.entity.Profesional;
 import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.ProfesionalRepository;
+import com.alma.alma_backend.mapper.PacienteMapper;
 import com.alma.alma_backend.service.PacienteService;
 import com.alma.alma_backend.service.ProfesionalService;
 import com.alma.alma_backend.service.UsuarioService;
@@ -66,7 +67,7 @@ public class ProfesionalController {
 
         List<PacienteDTO> pacientes = profesional.getAsignaciones().stream()
             .map(AsignacionProfesionalPaciente::getPaciente)
-            .map(PacienteDTO::fromPaciente)
+            .map(PacienteMapper::toPacienteDTO)
             .collect(Collectors.toList());
 
         return ResponseEntity.ok(pacientes);

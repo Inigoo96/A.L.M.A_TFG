@@ -5,6 +5,7 @@ import com.alma.alma_backend.dto.PacienteRegistroDTO;
 import com.alma.alma_backend.dto.ProfesionalRegistroDTO;
 import com.alma.alma_backend.dto.UsuarioResponseDTO;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.mapper.UsuarioMapper;
 import com.alma.alma_backend.service.AuthService;
 import com.alma.alma_backend.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class AuthController {
     @PostMapping("/register/organization")
     public ResponseEntity<?> registrarOrganizacion(@RequestBody OrganizacionRegistroDTO registroDTO) {
         try {
-            UsuarioResponseDTO nuevoAdmin = authService.registrarOrganizacionYAdmin(registroDTO);
+            UsuarioResponseDTO nuevoAdmin = UsuarioMapper.toResponse(authService.registrarOrganizacionYAdmin(registroDTO));
             return new ResponseEntity<>(nuevoAdmin, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));
@@ -49,7 +50,8 @@ public class AuthController {
             // Obtener el ID de la organización del administrador autenticado
             Integer organizacionId = currentUser.getOrganizacion().getId();
 
-            UsuarioResponseDTO nuevoProfesional = authService.registrarProfesional(registroDTO, organizacionId);
+            UsuarioResponseDTO nuevoProfesional = UsuarioMapper.toResponse(
+                    authService.registrarProfesional(registroDTO, organizacionId));
             return new ResponseEntity<>(nuevoProfesional, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));
@@ -71,7 +73,8 @@ public class AuthController {
             // Obtener el ID de la organización del administrador autenticado
             Integer organizacionId = currentUser.getOrganizacion().getId();
 
-            UsuarioResponseDTO nuevoPaciente = authService.registrarPaciente(registroDTO, organizacionId);
+            UsuarioResponseDTO nuevoPaciente = UsuarioMapper.toResponse(
+                    authService.registrarPaciente(registroDTO, organizacionId));
             return new ResponseEntity<>(nuevoPaciente, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));

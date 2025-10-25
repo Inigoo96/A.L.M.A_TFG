@@ -5,6 +5,7 @@ import com.alma.alma_backend.dto.MensajeChatResponseDTO;
 import com.alma.alma_backend.dto.SesionChatRequestDTO;
 import com.alma.alma_backend.dto.SesionChatResponseDTO;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.mapper.ChatMapper;
 import com.alma.alma_backend.service.ChatService;
 import com.alma.alma_backend.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -37,16 +39,17 @@ public class ChatController {
     public ResponseEntity<SesionChatResponseDTO> iniciarSesion(@Valid @RequestBody SesionChatRequestDTO request) {
         logger.info("Iniciando sesión de chat entre paciente ID: {} y profesional ID: {}",
                 request.getIdPaciente(), request.getIdProfesional());
-        SesionChatResponseDTO sesion = chatService.iniciarSesionChat(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(sesion);
+        var sesion = chatService.iniciarSesionChat(request);
+        long unread = chatService.contarMensajesNoLeidos(sesion.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ChatMapper.toResponse(sesion, unread));
     }
 
     @GetMapping("/sesion/{id}")
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'PACIENTE', 'ADMIN_ORGANIZACION')")
     public ResponseEntity<SesionChatResponseDTO> obtenerSesion(@PathVariable Integer id) {
         logger.debug("Obteniendo sesión de chat ID: {}", id);
-        SesionChatResponseDTO sesion = chatService.obtenerSesionPorId(id);
-        return ResponseEntity.ok(sesion);
+        var sesion = chatService.obtenerSesionPorId(id);
+        return ResponseEntity.ok(ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())));
     }
 
     @GetMapping("/sesion/activa")
@@ -56,15 +59,17 @@ public class ChatController {
             @RequestParam Integer idProfesional) {
         logger.debug("Obteniendo o creando sesión activa entre paciente ID: {} y profesional ID: {}",
                 idPaciente, idProfesional);
-        SesionChatResponseDTO sesion = chatService.obtenerOCrearSesionActiva(idPaciente, idProfesional);
-        return ResponseEntity.ok(sesion);
+        var sesion = chatService.obtenerOCrearSesionActiva(idPaciente, idProfesional);
+        return ResponseEntity.ok(ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())));
     }
 
     @GetMapping("/sesiones/paciente/{idPaciente}")
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'PACIENTE', 'ADMIN_ORGANIZACION')")
     public ResponseEntity<List<SesionChatResponseDTO>> obtenerSesionesPaciente(@PathVariable Integer idPaciente) {
         logger.debug("Obteniendo sesiones del paciente ID: {}", idPaciente);
-        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesPorPaciente(idPaciente);
+        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesPorPaciente(idPaciente).stream()
+                .map(sesion -> ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(sesiones);
     }
 
@@ -72,7 +77,9 @@ public class ChatController {
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'ADMIN_ORGANIZACION')")
     public ResponseEntity<List<SesionChatResponseDTO>> obtenerSesionesProfesional(@PathVariable Integer idProfesional) {
         logger.debug("Obteniendo sesiones del profesional ID: {}", idProfesional);
-        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesPorProfesional(idProfesional);
+        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesPorProfesional(idProfesional).stream()
+                .map(sesion -> ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(sesiones);
     }
 
@@ -80,7 +87,9 @@ public class ChatController {
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     public ResponseEntity<List<SesionChatResponseDTO>> obtenerSesionesActivas() {
         logger.debug("Obteniendo todas las sesiones activas");
-        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesActivas();
+        List<SesionChatResponseDTO> sesiones = chatService.obtenerSesionesActivas().stream()
+                .map(sesion -> ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(sesiones);
     }
 
@@ -88,8 +97,8 @@ public class ChatController {
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'PACIENTE')")
     public ResponseEntity<SesionChatResponseDTO> archivarSesion(@PathVariable Integer id) {
         logger.info("Archivando sesión de chat ID: {}", id);
-        SesionChatResponseDTO sesion = chatService.archivarSesion(id);
-        return ResponseEntity.ok(sesion);
+        var sesion = chatService.archivarSesion(id);
+        return ResponseEntity.ok(ChatMapper.toResponse(sesion, chatService.contarMensajesNoLeidos(sesion.getId())));
     }
 
     @PostMapping("/mensaje")
@@ -103,7 +112,7 @@ public class ChatController {
         logger.info("Usuario ID: {} enviando mensaje en sesión ID: {}",
                 currentUser.getId(), request.getIdSesionChat());
 
-        MensajeChatResponseDTO mensaje = chatService.enviarMensaje(request, currentUser.getId());
+        MensajeChatResponseDTO mensaje = ChatMapper.toResponse(chatService.enviarMensaje(request, currentUser.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(mensaje);
     }
 
@@ -111,7 +120,9 @@ public class ChatController {
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'PACIENTE', 'ADMIN_ORGANIZACION')")
     public ResponseEntity<List<MensajeChatResponseDTO>> obtenerMensajes(@PathVariable Integer idSesionChat) {
         logger.debug("Obteniendo mensajes de la sesión ID: {}", idSesionChat);
-        List<MensajeChatResponseDTO> mensajes = chatService.obtenerMensajesPorSesion(idSesionChat);
+        List<MensajeChatResponseDTO> mensajes = chatService.obtenerMensajesPorSesion(idSesionChat).stream()
+                .map(ChatMapper::toResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(mensajes);
     }
 
@@ -119,7 +130,7 @@ public class ChatController {
     @PreAuthorize("hasAnyRole('PROFESIONAL', 'PACIENTE')")
     public ResponseEntity<MensajeChatResponseDTO> marcarComoLeido(@PathVariable Integer idMensaje) {
         logger.debug("Marcando mensaje ID: {} como leído", idMensaje);
-        MensajeChatResponseDTO mensaje = chatService.marcarMensajeComoLeido(idMensaje);
+        MensajeChatResponseDTO mensaje = ChatMapper.toResponse(chatService.marcarMensajeComoLeido(idMensaje));
         return ResponseEntity.ok(mensaje);
     }
 

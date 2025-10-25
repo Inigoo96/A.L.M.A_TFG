@@ -1,6 +1,5 @@
 package com.alma.alma_backend.dto;
 
-import com.alma.alma_backend.entity.Paciente;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,14 +15,4 @@ public class PacienteDTO {
     private String apellidos;
     private String email;
     private LocalDate fechaNacimiento;
-
-    public static PacienteDTO fromPaciente(Paciente paciente) {
-        PacienteDTO dto = new PacienteDTO();
-        dto.setId(paciente.getId());
-        dto.setNombre(paciente.getUsuario().getNombre());
-        dto.setApellidos(paciente.getUsuario().getApellidos());
-        dto.setEmail(paciente.getUsuario().getEmail());
-        dto.setFechaNacimiento(paciente.getFechaNacimiento());
-        return dto;
-    }
 }

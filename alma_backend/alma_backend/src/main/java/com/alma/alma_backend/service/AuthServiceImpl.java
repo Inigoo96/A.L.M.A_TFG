@@ -3,9 +3,7 @@ package com.alma.alma_backend.service;
 import com.alma.alma_backend.dto.OrganizacionRegistroDTO;
 import com.alma.alma_backend.dto.PacienteRegistroDTO;
 import com.alma.alma_backend.dto.ProfesionalRegistroDTO;
-import com.alma.alma_backend.dto.UsuarioResponseDTO;
 import com.alma.alma_backend.entity.*;
-import com.alma.alma_backend.mapper.UsuarioMapper;
 import com.alma.alma_backend.repository.*;
 import com.alma.alma_backend.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public UsuarioResponseDTO registrarOrganizacionYAdmin(OrganizacionRegistroDTO registroDTO) {
+    public Usuario registrarOrganizacionYAdmin(OrganizacionRegistroDTO registroDTO) {
         // === VALIDACIONES DE FORMATO ===
 
         // Validar CIF
@@ -97,13 +95,12 @@ public class AuthServiceImpl implements AuthService {
         adminUsuario.setPasswordTemporal(false);
         adminUsuario.setFechaRegistro(LocalDateTime.now());
 
-        Usuario usuarioGuardado = usuarioRepository.save(adminUsuario);
-        return mapToUsuarioResponseDTO(usuarioGuardado);
+        return usuarioRepository.save(adminUsuario);
     }
 
     @Override
     @Transactional
-    public UsuarioResponseDTO registrarProfesional(ProfesionalRegistroDTO registroDTO, Integer organizacionId) {
+    public Usuario registrarProfesional(ProfesionalRegistroDTO registroDTO, Integer organizacionId) {
         // 0. Validaciones de formato
         if (!ValidationUtils.isValidDNIorNIE(registroDTO.getDni())) {
             throw new IllegalArgumentException("El DNI del profesional no es válido.");
@@ -154,12 +151,12 @@ public class AuthServiceImpl implements AuthService {
         nuevoProfesional.setCentroSalud(registroDTO.getCentroSalud());
         profesionalRepository.save(nuevoProfesional);
 
-        return mapToUsuarioResponseDTO(usuarioGuardado);
+        return usuarioGuardado;
     }
 
     @Override
     @Transactional
-    public UsuarioResponseDTO registrarPaciente(PacienteRegistroDTO registroDTO, Integer organizacionId) {
+    public Usuario registrarPaciente(PacienteRegistroDTO registroDTO, Integer organizacionId) {
         // 0. Validaciones de formato
         if (!ValidationUtils.isValidDNIorNIE(registroDTO.getDni())) {
             throw new IllegalArgumentException("El DNI del paciente no es válido.");
@@ -207,11 +204,6 @@ public class AuthServiceImpl implements AuthService {
         nuevoPaciente.setGenero(registroDTO.getGenero());
         pacienteRepository.save(nuevoPaciente);
 
-        return mapToUsuarioResponseDTO(usuarioGuardado);
-    }
-
-    private UsuarioResponseDTO mapToUsuarioResponseDTO(Usuario usuario) {
-        if (usuario == null) return null;
-        return UsuarioMapper.toResponse(usuario);
+        return usuarioGuardado;
     }
 }

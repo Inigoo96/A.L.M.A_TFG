@@ -8,6 +8,7 @@ import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.AsignacionProfesionalPacienteRepository;
 import com.alma.alma_backend.repository.ProfesionalRepository;
+import com.alma.alma_backend.mapper.PacienteMapper;
 import com.alma.alma_backend.service.PacienteService;
 import com.alma.alma_backend.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +49,7 @@ public class PacienteController {
 
         // Convertir las entidades a DTOs seguros
         List<PacienteResponseDTO> pacientesDTO = pacientesDeLaOrganizacion.stream()
-                .map(PacienteResponseDTO::fromPaciente)
+                .map(PacienteMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(pacientesDTO);
@@ -68,13 +69,13 @@ public class PacienteController {
                     }
 
                     if (currentUser.getTipoUsuario() == TipoUsuario.ADMIN_ORGANIZACION || currentUser.getTipoUsuario() == TipoUsuario.SUPER_ADMIN) {
-                        return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente));
+                        return ResponseEntity.ok(PacienteMapper.toResponse(paciente));
                     }
 
                     if (currentUser.getTipoUsuario() == TipoUsuario.PROFESIONAL) {
                         return profesionalRepository.findByUsuario_Id(currentUser.getId()).flatMap(profesional -> {
                             if (asignacionRepository.existeAsignacionActiva(profesional.getId(), paciente.getId())) {
-                                return Optional.of(ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente)));
+                                return Optional.of(ResponseEntity.ok(PacienteMapper.toResponse(paciente)));
                             }
                             return Optional.of(ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build());
                         }).orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build());
@@ -97,7 +98,7 @@ public class PacienteController {
                     if (!Objects.equals(paciente.getUsuario().getOrganizacion().getId(), userOrgId)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                     }
-                    return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(paciente));
+                    return ResponseEntity.ok(PacienteMapper.toResponse(paciente));
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado para el usuario con id: " + usuarioId));
     }
@@ -119,7 +120,7 @@ public class PacienteController {
                      return ResponseEntity.status(HttpStatus.FORBIDDEN).<PacienteResponseDTO>build();
                 }
                 Paciente updatedPaciente = pacienteService.updatePaciente(id, pacienteDetails);
-                return ResponseEntity.ok(PacienteResponseDTO.fromPaciente(updatedPaciente));
+                return ResponseEntity.ok(PacienteMapper.toResponse(updatedPaciente));
             })
             .orElseThrow(() -> new ResourceNotFoundException("Paciente no encontrado con id: " + id));
     }
