@@ -35,7 +35,6 @@ public class Foro {
     private Boolean activo = true;
 
     @Column(name = "FECHA_CREACION", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaCreacion;
 
     @PrePersist

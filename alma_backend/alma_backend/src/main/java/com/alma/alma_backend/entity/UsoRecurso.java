@@ -33,7 +33,6 @@ public class UsoRecurso {
     private Integer idRecurso;
 
     @Column(name = "FECHA_USO", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaUso;
 
     @Column(name = "TIEMPO_CONSUMIDO_MINUTOS")

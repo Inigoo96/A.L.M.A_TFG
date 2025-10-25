@@ -44,7 +44,6 @@ public class Video {
     private Boolean activo = true;
 
     @Column(name = "FECHA_PUBLICACION", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaPublicacion;
 
     @PrePersist
