@@ -40,4 +40,6 @@ public interface AsignacionProfesionalPacienteService {
 
     // Método para desactivar una asignación (soft delete)
     AsignacionProfesionalPaciente deactivateAsignacion(Integer id);
+
+    boolean isAsignacionActiva(Long idProfesional, Long idPaciente);
 }

@@ -97,4 +97,16 @@ public class AsignacionProfesionalPacienteServiceImpl implements AsignacionProfe
         asignacion.setActivo(false);
         return asignacionRepository.save(asignacion);
     }
+
+    @Override
+    public boolean isAsignacionActiva(Long idProfesional, Long idPaciente) {
+        if (idProfesional == null || idPaciente == null) {
+            return false;
+        }
+
+        return asignacionRepository.existeAsignacionActiva(
+                Math.toIntExact(idProfesional),
+                Math.toIntExact(idPaciente)
+        );
+    }
 }

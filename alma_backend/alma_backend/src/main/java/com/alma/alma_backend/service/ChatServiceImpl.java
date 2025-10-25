@@ -8,6 +8,7 @@ import com.alma.alma_backend.entity.Paciente;
 import com.alma.alma_backend.entity.Profesional;
 import com.alma.alma_backend.entity.SesionChat;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.exception.ChatValidationException;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AsignacionProfesionalPacienteService asignacionProfesionalPacienteService;
 
     @Override
     @Transactional
@@ -125,6 +129,30 @@ public class ChatServiceImpl implements ChatService {
 
         Usuario remitente = usuarioRepository.findById(idRemitente)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario remitente no encontrado con id: " + idRemitente));
+
+        Paciente pacienteSesion = sesion.getPaciente();
+        Profesional profesionalSesion = sesion.getProfesional();
+
+        boolean remitenteEsPaciente = pacienteSesion != null
+                && pacienteSesion.getUsuario() != null
+                && pacienteSesion.getUsuario().getId().equals(remitente.getId());
+
+        boolean remitenteEsProfesional = profesionalSesion != null
+                && profesionalSesion.getUsuario() != null
+                && profesionalSesion.getUsuario().getId().equals(remitente.getId());
+
+        if (!remitenteEsPaciente && !remitenteEsProfesional) {
+            throw new ChatValidationException("El remitente no pertenece a la sesión de chat especificada.");
+        }
+
+        boolean asignacionActiva = asignacionProfesionalPacienteService.isAsignacionActiva(
+                profesionalSesion != null ? profesionalSesion.getId().longValue() : null,
+                pacienteSesion != null ? pacienteSesion.getId().longValue() : null
+        );
+
+        if (!asignacionActiva) {
+            throw new ChatValidationException("No existe una asignación activa entre el profesional y el paciente para esta sesión.");
+        }
 
         MensajeChat mensaje = new MensajeChat();
         mensaje.setSesionChat(sesion);
