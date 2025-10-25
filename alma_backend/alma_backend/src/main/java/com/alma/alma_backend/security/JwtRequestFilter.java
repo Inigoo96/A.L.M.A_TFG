@@ -1,5 +1,7 @@
 package com.alma.alma_backend.security;
 
+import com.alma.alma_backend.logging.AuditLogService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -8,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Filtro que intercepta las peticiones HTTP para validar tokens JWT.
@@ -34,11 +40,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
+    private final AuditLogService auditLogService;
 
     @Autowired
-    public JwtRequestFilter(UserDetailsService userDetailsService, JwtUtil jwtUtil) {
+    public JwtRequestFilter(UserDetailsService userDetailsService, JwtUtil jwtUtil, AuditLogService auditLogService) {
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -84,19 +92,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
                             logger.debug("Usuario '{}' autenticado exitosamente mediante JWT", username);
                         } else {
-                            logger.warn("Token JWT inválido para el usuario: {}", username);
+                            auditLogService.logSecurityWarn("Token JWT inválido para el usuario: {}", username);
+                            writeUnauthorizedResponse(request, response, "Invalid or expired token");
+                            return;
                         }
 
                     } catch (UsernameNotFoundException e) {
-                        logger.warn("Usuario no encontrado: {}", username);
+                        auditLogService.logSecurityWarn("Usuario no encontrado para token JWT: {}", username);
+                        writeUnauthorizedResponse(request, response, "Invalid or expired token");
+                        return;
                     }
                 }
             }
 
         } catch (JwtException e) {
-            logger.error("Error al procesar el token JWT: {}", e.getMessage());
+            auditLogService.logSecurityWarn("Error al procesar token JWT: {}", e.getMessage());
+            writeUnauthorizedResponse(request, response, "Invalid or expired token");
+            return;
         } catch (Exception e) {
             logger.error("Error inesperado en el filtro JWT: {}", e.getMessage(), e);
+            writeUnauthorizedResponse(request, response, "Invalid or expired token");
+            return;
         }
 
         // Continuar con la cadena de filtros independientemente del resultado
@@ -125,11 +141,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
         // No filtrar solo endpoints de autenticación públicos y recursos públicos
-        return path.equals("/api/auth/login") ||
-               path.equals("/api/auth/register/organization") ||
-               path.startsWith("/api/public/") ||
-               path.equals("/actuator/health") ||
+        return path.startsWith("/api/auth/") ||
                path.startsWith("/swagger-ui") ||
                path.startsWith("/v3/api-docs");
+    }
+
+    private void writeUnauthorizedResponse(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now().toString());
+        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+        body.put("error", "Unauthorized");
+        body.put("message", message);
+        body.put("path", request.getRequestURI());
+
+        new ObjectMapper().writeValue(response.getOutputStream(), body);
     }
 }

@@ -12,7 +12,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -29,15 +30,16 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                         HttpServletResponse response,
                         AuthenticationException authException) throws IOException, ServletException {
 
-        logger.error("Error de autenticación: {}", authException.getMessage());
+        logger.error("[AUTH] Error de autenticación: {}", authException.getMessage());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        final Map<String, Object> body = new HashMap<>();
+        final Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now().toString());
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-        body.put("error", "No autorizado");
-        body.put("message", authException.getMessage());
+        body.put("error", "Unauthorized");
+        body.put("message", "Invalid or expired token");
         body.put("path", request.getServletPath());
 
         final ObjectMapper mapper = new ObjectMapper();

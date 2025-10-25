@@ -1,11 +1,13 @@
 package com.alma.alma_backend.controller;
 
+import com.alma.alma_backend.dto.ApiResponse;
 import com.alma.alma_backend.dto.OrganizacionRegistroDTO;
 import com.alma.alma_backend.dto.PacienteRegistroDTO;
 import com.alma.alma_backend.dto.ProfesionalRegistroDTO;
 import com.alma.alma_backend.dto.UsuarioResponseDTO;
 import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.mapper.UsuarioMapper;
+import com.alma.alma_backend.logging.AuditLogService;
 import com.alma.alma_backend.service.AuthService;
 import com.alma.alma_backend.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -24,64 +26,84 @@ public class AuthController {
 
     private final AuthService authService;
     private final UsuarioService usuarioService;
+    private final AuditLogService auditLogService;
 
     @PostMapping("/register/organization")
-    public ResponseEntity<?> registrarOrganizacion(@RequestBody OrganizacionRegistroDTO registroDTO) {
+    public ResponseEntity<ApiResponse<?>> registrarOrganizacion(@RequestBody OrganizacionRegistroDTO registroDTO) {
         try {
             UsuarioResponseDTO nuevoAdmin = UsuarioMapper.toResponse(authService.registrarOrganizacionYAdmin(registroDTO));
-            return new ResponseEntity<>(nuevoAdmin, HttpStatus.CREATED);
+            auditLogService.logAuthWarn("Nueva organización registrada: {}", nuevoAdmin.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Organización registrada", nuevoAdmin));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), Map.of("error", "Validation Error")));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Conflict", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), e.getMessage(), Map.of("error", "Conflict")));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal Server Error", "message", "Error al procesar el registro de la organización"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error al procesar el registro de la organización"));
         }
     }
 
     @PostMapping("/register/profesional")
     @PreAuthorize("hasRole('ADMIN_ORGANIZACION')")
-    public ResponseEntity<?> registrarProfesional(@RequestBody ProfesionalRegistroDTO registroDTO, Authentication authentication) {
+    public ResponseEntity<ApiResponse<?>> registrarProfesional(@RequestBody ProfesionalRegistroDTO registroDTO, Authentication authentication) {
         try {
             // Obtener el usuario autenticado desde el token
             Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                     .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+            auditLogService.logSecurityWarn("Verificación de rol para usuario {} con rol {}", currentUser.getEmail(), currentUser.getTipoUsuario());
 
             // Obtener el ID de la organización del administrador autenticado
             Integer organizacionId = currentUser.getOrganizacion().getId();
 
             UsuarioResponseDTO nuevoProfesional = UsuarioMapper.toResponse(
                     authService.registrarProfesional(registroDTO, organizacionId));
-            return new ResponseEntity<>(nuevoProfesional, HttpStatus.CREATED);
+            auditLogService.logAuthWarn("Profesional registrado por {}", currentUser.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Profesional registrado", nuevoProfesional));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), Map.of("error", "Validation Error")));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Conflict", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), e.getMessage(), Map.of("error", "Conflict")));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal Server Error", "message", "Error al procesar el registro del profesional"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error al procesar el registro del profesional"));
         }
     }
 
     @PostMapping("/register/paciente")
     @PreAuthorize("hasRole('ADMIN_ORGANIZACION')")
-    public ResponseEntity<?> registrarPaciente(@RequestBody PacienteRegistroDTO registroDTO, Authentication authentication) {
+    public ResponseEntity<ApiResponse<?>> registrarPaciente(@RequestBody PacienteRegistroDTO registroDTO, Authentication authentication) {
         try {
             // Obtener el usuario autenticado desde el token
             Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                     .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+            auditLogService.logSecurityWarn("Verificación de rol para usuario {} con rol {}", currentUser.getEmail(), currentUser.getTipoUsuario());
 
             // Obtener el ID de la organización del administrador autenticado
             Integer organizacionId = currentUser.getOrganizacion().getId();
 
             UsuarioResponseDTO nuevoPaciente = UsuarioMapper.toResponse(
                     authService.registrarPaciente(registroDTO, organizacionId));
-            return new ResponseEntity<>(nuevoPaciente, HttpStatus.CREATED);
+            auditLogService.logAuthWarn("Paciente registrado por {}", currentUser.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Paciente registrado", nuevoPaciente));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Validation Error", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), Map.of("error", "Validation Error")));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Conflict", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), e.getMessage(), Map.of("error", "Conflict")));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal Server Error", "message", "Error al procesar el registro del paciente"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error al procesar el registro del paciente"));
         }
     }
 }
