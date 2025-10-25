@@ -2,44 +2,38 @@ package com.alma.alma_backend.controller;
 
 import com.alma.alma_backend.dto.ApiResponse;
 import com.alma.alma_backend.dto.ErrorResponse;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import org.springframework.web.util.pattern.PathPattern;
-import org.springframework.web.util.pattern.PathPatternParser;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.Set;
 
 @RestControllerAdvice
 public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
-    private static final PathPatternParser PATH_PATTERN_PARSER = new PathPatternParser();
-    private static final List<PathPattern> SPRINGDOC_PATH_PATTERNS = Stream.of(
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/webjars/**"
-    ).map(PATH_PATTERN_PARSER::parse).toList();
-    private static final String SPRINGDOC_PACKAGE_PREFIX = "org.springdoc";
-    private static final String CONTROLLER_PACKAGE_PREFIX = "com.alma.alma_backend";
+    private static final String APPLICATION_CONTROLLER_PACKAGE = "com.alma.alma_backend.controller";
+    private static final Set<String> FRAMEWORK_PATH_PREFIXES = Set.of(
+        "/swagger-ui",
+        "/v3/api-docs",
+        "/swagger-resources",
+        "/webjars",
+        "/error"
+    );
+    private static final String WRAPPED_ATTRIBUTE = ApiResponseAdvice.class.getName() + ".WRAPPED";
+    private static final String ERROR_URI_ATTRIBUTE = "jakarta.servlet.error.request_uri";
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
@@ -49,20 +43,14 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             return false;
         }
 
-        if (!controllerClass.getPackageName().startsWith(CONTROLLER_PACKAGE_PREFIX)) {
+        if (!controllerClass.getPackageName().startsWith(APPLICATION_CONTROLLER_PACKAGE)) {
             return false;
         }
 
         if (BasicErrorController.class.isAssignableFrom(controllerClass) ||
-                ResponseEntityExceptionHandler.class.isAssignableFrom(controllerClass) ||
-                controllerClass.getPackageName().startsWith(SPRINGDOC_PACKAGE_PREFIX)) {
+                ResponseEntityExceptionHandler.class.isAssignableFrom(controllerClass)) {
             return false;
         }
-
-        if (isSwaggerRequest()) {
-            return false;
-        }
-
         return true;
     }
 
@@ -73,70 +61,59 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request,
                                   ServerHttpResponse response) {
-        if (isSwaggerRequest(request)) {
+        if (body == null || body instanceof ApiResponse) {
             return body;
         }
 
-        if (body instanceof ApiResponse || body instanceof ResponseEntity || body == null) {
-            return body;
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            HttpServletRequest httpRequest = servletRequest.getServletRequest();
+            if (shouldSkip(httpRequest)) {
+                return body;
+            }
+            httpRequest.setAttribute(WRAPPED_ATTRIBUTE, Boolean.TRUE);
         }
 
-        int status = 200;
+        return wrapBody(body, response);
+    }
+
+    private Object wrapBody(Object body, ServerHttpResponse response) {
+        int status = HttpStatus.OK.value();
         if (response instanceof ServletServerHttpResponse servletResponse) {
             status = servletResponse.getServletResponse().getStatus();
-            if (status == 0) {
-                status = 200;
+            if (status <= 0) {
+                status = HttpStatus.OK.value();
             }
         }
 
-        if (status >= 400) {
-            String message = extractErrorMessage(body);
-            return ApiResponse.error(status, message, null);
+        if (status >= HttpStatus.BAD_REQUEST.value()) {
+            return ApiResponse.error(status, extractErrorMessage(body), null);
         }
 
         return ApiResponse.success(status, "OK", body);
     }
 
-    private boolean isSwaggerRequest() {
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (requestAttributes instanceof ServletRequestAttributes servletAttributes) {
-            return isSwaggerPath(servletAttributes.getRequest());
-        }
-        return false;
-    }
-
-    private boolean isSwaggerRequest(ServerHttpRequest request) {
-        if (request instanceof org.springframework.http.server.ServletServerHttpRequest servletServerHttpRequest) {
-            return isSwaggerPath(servletServerHttpRequest.getServletRequest());
-        }
-        if (request != null) {
-            return isSwaggerPath(request.getURI().getPath());
-        }
-        return false;
-    }
-
-    private boolean isSwaggerPath(HttpServletRequest request) {
+    private boolean shouldSkip(HttpServletRequest request) {
         if (request == null) {
-            return false;
+            return true;
         }
-        String path = (String) request.getAttribute("jakarta.servlet.error.request_uri");
-        if (path == null) {
+        if (Boolean.TRUE.equals(request.getAttribute(WRAPPED_ATTRIBUTE))) {
+            return true;
+        }
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            return true;
+        }
+
+        String path = (String) request.getAttribute(ERROR_URI_ATTRIBUTE);
+        if (path == null || path.isBlank()) {
             path = request.getRequestURI();
         }
-        return isSwaggerPath(path, request.getContextPath());
-    }
 
-    private boolean isSwaggerPath(String path) {
-        return isSwaggerPath(path, null);
-    }
-
-    private boolean isSwaggerPath(String path, String contextPath) {
         if (path == null) {
-            return false;
+            return true;
         }
-        String lookupPath = normalizePath(path, contextPath);
-        PathContainer pathContainer = PathContainer.parsePath(lookupPath);
-        return SPRINGDOC_PATH_PATTERNS.stream().anyMatch(pattern -> pattern.matches(pathContainer));
+
+        String normalized = normalizePath(path, request.getContextPath());
+        return FRAMEWORK_PATH_PREFIXES.stream().anyMatch(normalized::startsWith);
     }
 
     private String normalizePath(String path, String contextPath) {
@@ -150,6 +127,14 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
     private String extractErrorMessage(Object body) {
         if (body instanceof ErrorResponse errorResponse) {
             return errorResponse.getMessage();
+        }
+        if (body instanceof ProblemDetail problemDetail) {
+            if (problemDetail.getDetail() != null && !problemDetail.getDetail().isBlank()) {
+                return problemDetail.getDetail();
+            }
+            if (problemDetail.getTitle() != null && !problemDetail.getTitle().isBlank()) {
+                return problemDetail.getTitle();
+            }
         }
         if (body instanceof Map) {
             Object message = ((Map<?, ?>) body).get("message");
