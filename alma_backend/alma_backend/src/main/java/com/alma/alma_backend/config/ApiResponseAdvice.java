@@ -6,7 +6,6 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -17,33 +16,21 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import org.springframework.web.util.pattern.PathPattern;
-import org.springframework.web.util.pattern.PathPatternParser;
 
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 
-@RestControllerAdvice(basePackages = "com.alma.alma_backend.controller")
+@RestControllerAdvice
 public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
-    private static final PathPatternParser PATH_PATTERN_PARSER = new PathPatternParser();
-    private static final List<PathPattern> SPRINGDOC_PATH_PATTERNS = Stream.of(
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/webjars/**"
-    ).map(PATH_PATTERN_PARSER::parse).toList();
-    private static final String SPRINGDOC_PACKAGE_PREFIX = "org.springdoc";
+    private static final Set<String> SWAGGER_PATH_PREFIXES = Set.of(
+        "/v3/api-docs",
+        "/swagger-ui",
+        "/swagger-resources",
+        "/webjars"
+    );
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        Class<?> controllerClass = returnType.getContainingClass();
-        if (controllerClass != null && controllerClass.getPackageName().startsWith(SPRINGDOC_PACKAGE_PREFIX)) {
-            return false;
-        }
         if (isSwaggerRequest()) {
             return false;
         }
@@ -98,35 +85,25 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         }
 
         String path = request.getURI().getPath();
-        return isSwaggerPath(path, null);
+        return path != null && isSwaggerPath(path);
     }
 
     private boolean isSwaggerPath(HttpServletRequest request) {
         if (request == null) {
             return false;
         }
-        return isSwaggerPath(request.getRequestURI(), request.getContextPath());
+        String requestURI = request.getRequestURI();
+        if (requestURI == null) {
+            return false;
+        }
+        return SWAGGER_PATH_PREFIXES.stream().anyMatch(requestURI::startsWith);
     }
 
     private boolean isSwaggerPath(String path) {
-        return isSwaggerPath(path, null);
-    }
-
-    private boolean isSwaggerPath(String path, String contextPath) {
         if (path == null) {
             return false;
         }
-        String lookupPath = normalizePath(path, contextPath);
-        PathContainer pathContainer = PathContainer.parsePath(lookupPath);
-        return SPRINGDOC_PATH_PATTERNS.stream().anyMatch(pattern -> pattern.matches(pathContainer));
-    }
-
-    private String normalizePath(String path, String contextPath) {
-        if (contextPath != null && !contextPath.isEmpty() && path.startsWith(contextPath)) {
-            String withoutContext = path.substring(contextPath.length());
-            return withoutContext.isEmpty() ? "/" : withoutContext;
-        }
-        return path;
+        return SWAGGER_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
     private String extractErrorMessage(Object body) {
