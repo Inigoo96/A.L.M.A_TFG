@@ -1,6 +1,7 @@
 package com.alma.alma_backend.exceptions;
 
 import com.alma.alma_backend.dto.ApiResponse;
+import com.alma.alma_backend.exception.ChatValidationException;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
@@ -47,6 +48,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleJwtException(JwtException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token"));
+    }
+
+    @ExceptionHandler(ChatValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleChatValidationException(ChatValidationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
     @ExceptionHandler({ResourceNotFoundException.class, EntityNotFoundException.class})
