@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class MensajeChat {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_SESION_CHAT", nullable = false)
+    @JsonBackReference("sesion-chat-mensajes")
     private SesionChat sesionChat;
 
     @ManyToOne(fetch = FetchType.LAZY)

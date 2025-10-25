@@ -1,6 +1,6 @@
 package com.alma.alma_backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +30,6 @@ public class FaseDuelo {
     private Integer ordenFase;
 
     @OneToMany(mappedBy = "faseDuelo", fetch = FetchType.LAZY)
-    @JsonIgnore
+    @JsonManagedReference("fase-duelo-progresos")
     private List<ProgresoDuelo> progresosDuelo;
 }
