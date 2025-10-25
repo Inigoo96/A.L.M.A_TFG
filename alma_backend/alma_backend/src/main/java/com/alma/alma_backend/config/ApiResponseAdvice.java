@@ -8,12 +8,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import java.util.Set;
+
 @RestControllerAdvice
 public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
+
+    private static final Set<String> SWAGGER_PATH_PREFIXES = Set.of(
+        "/v3/api-docs",
+        "/swagger-ui",
+        "/swagger-resources",
+        "/webjars/swagger-ui"
+    );
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
@@ -27,6 +37,10 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request,
                                   ServerHttpResponse response) {
+        if (isSwaggerRequest(request)) {
+            return body;
+        }
+
         if (body instanceof ApiResponse || body instanceof ResponseEntity || body == null) {
             return body;
         }
@@ -47,10 +61,24 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         return ApiResponse.success(status, "OK", body);
     }
 
+    private boolean isSwaggerRequest(ServerHttpRequest request) {
+        String path = request.getURI().getPath();
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            path = servletRequest.getServletRequest().getRequestURI();
+        }
+
+        if (path == null) {
+            return false;
+        }
+
+        return SWAGGER_PATH_PREFIXES.stream().anyMatch(path::startsWith);
+    }
+
     private String extractErrorMessage(Object body) {
         if (body instanceof ErrorResponse errorResponse) {
             return errorResponse.getMessage();
         }
         return body != null ? body.toString() : "Error";
     }
+
 }
