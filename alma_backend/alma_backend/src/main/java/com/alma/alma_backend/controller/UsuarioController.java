@@ -60,10 +60,12 @@ public class UsuarioController {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();
+        boolean isSuperAdmin = currentUser.getTipoUsuario() == TipoUsuario.SUPER_ADMIN;
 
         return usuarioService.findById(id)
                 .map(usuario -> {
-                    if (!Objects.equals(usuario.getOrganizacion().getId(), userOrgId)) {
+                    // SUPER_ADMIN puede ver usuarios de cualquier organización
+                    if (!isSuperAdmin && !Objects.equals(usuario.getOrganizacion().getId(), userOrgId)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<UsuarioResponseDTO>build();
                     }
                     return ResponseEntity.ok(mapToDTO(usuario));
@@ -80,10 +82,12 @@ public class UsuarioController {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();
+        boolean isSuperAdmin = currentUser.getTipoUsuario() == TipoUsuario.SUPER_ADMIN;
 
         return usuarioService.findById(id)
                 .map(usuarioExistente -> {
-                    if (!Objects.equals(usuarioExistente.getOrganizacion().getId(), userOrgId)) {
+                    // SUPER_ADMIN puede modificar usuarios de cualquier organización
+                    if (!isSuperAdmin && !Objects.equals(usuarioExistente.getOrganizacion().getId(), userOrgId)) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<UsuarioResponseDTO>build();
                     }
                     Usuario updatedUsuario = usuarioService.updateUser(id, usuarioDetails);
@@ -98,9 +102,11 @@ public class UsuarioController {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();
+        boolean isSuperAdmin = currentUser.getTipoUsuario() == TipoUsuario.SUPER_ADMIN;
 
         usuarioService.findById(id).ifPresent(usuario -> {
-            if (Objects.equals(usuario.getOrganizacion().getId(), userOrgId)) {
+            // SUPER_ADMIN puede eliminar usuarios de cualquier organización
+            if (isSuperAdmin || Objects.equals(usuario.getOrganizacion().getId(), userOrgId)) {
                 usuarioService.deleteById(id);
             }
         });

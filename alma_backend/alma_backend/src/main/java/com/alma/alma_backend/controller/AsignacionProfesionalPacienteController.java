@@ -72,7 +72,7 @@ public class AsignacionProfesionalPacienteController {
     }
 
     @GetMapping("/paciente/{pacienteId}")
-    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'PROFESIONAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'PROFESIONAL', 'PACIENTE')")
     public ResponseEntity<List<AsignacionResponseDTO>> getAsignacionesByPacienteId(@PathVariable Integer pacienteId, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName()).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
         Integer userOrgId = currentUser.getOrganizacion().getId();

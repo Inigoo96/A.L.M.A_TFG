@@ -26,10 +26,12 @@ public interface OrganizacionRepository extends JpaRepository<Organizacion, Inte
     List<OrganizacionEstadisticasDTO> obtenerEstadisticasOrganizaciones();
 
     @Query("SELECT new com.alma.alma_backend.dto.OrganizacionEstadisticasDTO(" +
-           "o.id, o.nombreOficial, o.cif, o.estadoVerificacion, " +
-           "COUNT(DISTINCT u.id), " +
+           "o.id, o.nombreOficial, o.cif, " +
+           "(o.estadoVerificacion = com.alma.alma_backend.entity.EstadoVerificacion.VERIFICADA), " +
+           "SUM(CASE WHEN u.tipoUsuario = com.alma.alma_backend.entity.TipoUsuario.ADMIN_ORGANIZACION THEN 1 ELSE 0 END), " +
            "SUM(CASE WHEN u.tipoUsuario = com.alma.alma_backend.entity.TipoUsuario.PROFESIONAL THEN 1 ELSE 0 END), " +
-           "SUM(CASE WHEN u.tipoUsuario = com.alma.alma_backend.entity.TipoUsuario.PACIENTE THEN 1 ELSE 0 END)) " +
+           "SUM(CASE WHEN u.tipoUsuario = com.alma.alma_backend.entity.TipoUsuario.PACIENTE THEN 1 ELSE 0 END), " +
+           "SUM(CASE WHEN u.tipoUsuario = com.alma.alma_backend.entity.TipoUsuario.SUPER_ADMIN THEN 1 ELSE 0 END)) " +
            "FROM Organizacion o LEFT JOIN Usuario u ON u.organizacion.id = o.id " +
            "WHERE o.id = :idOrganizacion " +
            "GROUP BY o.id, o.nombreOficial, o.cif, o.estadoVerificacion")
