@@ -54,8 +54,18 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/authentication/**", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/progreso-duelo/fases").permitAll() // Permitir acceso público a las fases del duelo
+                    .requestMatchers(
+                            "/api/auth/**",
+                            "/api/authentication/**",
+                            "/api/public/**",
+                            "/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/swagger-resources/**",
+                            "/v3/api-docs/**",
+                            "/v3/api-docs.yaml",
+                            "/webjars/**"
+                    ).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/progreso-duelo/fases").permitAll() // Permitir acceso público a las fases del duelo
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
