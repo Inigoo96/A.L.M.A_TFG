@@ -71,6 +71,10 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
             httpRequest.setAttribute(WRAPPED_ATTRIBUTE, Boolean.TRUE);
         }
 
+        if (body instanceof String) {
+            return ApiResponse.success((String) body);
+        }
+
         return wrapBody(body, response);
     }
 

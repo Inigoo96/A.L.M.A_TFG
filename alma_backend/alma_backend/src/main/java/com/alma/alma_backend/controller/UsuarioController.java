@@ -1,5 +1,6 @@
 package com.alma.alma_backend.controller;
 
+import com.alma.alma_backend.dto.ApiResponse;
 import com.alma.alma_backend.dto.ErrorResponse;
 import com.alma.alma_backend.dto.ResetPasswordRequestDTO;
 import com.alma.alma_backend.dto.UpdatePasswordRequest;
@@ -11,7 +12,6 @@ import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.service.UsuarioService;
 import com.alma.alma_backend.mapper.UsuarioMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +40,6 @@ public class UsuarioController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     @Operation(summary = "Listar usuarios de la organización actual")
-    @ApiResponse(responseCode = "200", description = "Usuarios recuperados correctamente")
     public ResponseEntity<List<UsuarioResponseDTO>> getAllUsuarios(Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -57,7 +56,6 @@ public class UsuarioController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     @Operation(summary = "Obtener detalles de un usuario por ID")
-    @ApiResponse(responseCode = "200", description = "Usuario encontrado")
     public ResponseEntity<UsuarioResponseDTO> getUsuarioById(@PathVariable Integer id, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
@@ -76,7 +74,6 @@ public class UsuarioController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
     @Operation(summary = "Actualizar parcialmente un usuario", description = "Solo campos presentes en el cuerpo serán modificados")
-    @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente")
     public ResponseEntity<UsuarioResponseDTO> updateUsuario(@PathVariable Integer id,
                                                             @Valid @RequestBody UsuarioUpdateRequestDTO usuarioDetails,
                                                             Authentication authentication) {
@@ -113,24 +110,24 @@ public class UsuarioController {
 
     @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> updateMyPassword(@Valid @RequestBody UpdatePasswordRequest passwordRequest, Authentication authentication) {
+    public ResponseEntity<ApiResponse<Void>> updateMyPassword(@Valid @RequestBody UpdatePasswordRequest passwordRequest, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
 
         if (!passwordEncoder.matches(passwordRequest.getOldPassword(), currentUser.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("La contraseña actual es incorrecta"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), "La contraseña actual es incorrecta"));
         }
 
         currentUser.setPasswordHash(passwordEncoder.encode(passwordRequest.getNewPassword()));
         currentUser.setPasswordTemporal(false);
         usuarioService.save(currentUser);
 
-        return ResponseEntity.ok().body("Contraseña actualizada correctamente");
+        return ResponseEntity.ok(ApiResponse.success("Contraseña actualizada correctamente"));
     }
 
     @PostMapping("/{id}/reset-password")
-    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')") // Corregido para aceptar ambos roles
-    public ResponseEntity<?> resetPassword(@PathVariable Integer id, @Valid @RequestBody ResetPasswordRequestDTO request, Authentication authentication) {
+    @PreAuthorize("hasAnyRole('ADMIN_ORGANIZACION', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@PathVariable Integer id, @Valid @RequestBody ResetPasswordRequestDTO request, Authentication authentication) {
         Usuario currentUser = usuarioService.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario administrador no encontrado"));
         Integer adminOrgId = currentUser.getOrganizacion().getId();
@@ -138,17 +135,15 @@ public class UsuarioController {
         Usuario usuarioAModificar = usuarioService.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        // Un SUPER_ADMIN puede modificar cualquier usuario, un ADMIN_ORGANIZACION solo los de su organización
-        if (currentUser.getTipoUsuario().equals(TipoUsuario.ADMIN_ORGANIZACION))
-            if (!Objects.equals(usuarioAModificar.getOrganizacion().getId(), adminOrgId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("No puede modificar usuarios de otra organización."));
-            }
+        if (currentUser.getTipoUsuario().equals(TipoUsuario.ADMIN_ORGANIZACION) && !Objects.equals(usuarioAModificar.getOrganizacion().getId(), adminOrgId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(HttpStatus.FORBIDDEN.value(), "No puede modificar usuarios de otra organización."));
+        }
 
         usuarioAModificar.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         usuarioAModificar.setPasswordTemporal(true);
         usuarioService.save(usuarioAModificar);
 
-        return ResponseEntity.ok().body("Contraseña del usuario " + id + " actualizada correctamente.");
+        return ResponseEntity.ok(ApiResponse.success("Contraseña del usuario " + id + " actualizada correctamente."));
     }
 
     private UsuarioResponseDTO mapToDTO(Usuario usuario) {
