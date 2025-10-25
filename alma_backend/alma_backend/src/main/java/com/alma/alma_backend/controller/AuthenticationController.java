@@ -1,12 +1,13 @@
 package com.alma.alma_backend.controller;
 
+import com.alma.alma_backend.dto.ApiResponse;
 import com.alma.alma_backend.dto.AuthenticationRequest;
 import com.alma.alma_backend.dto.AuthenticationResponse;
-import com.alma.alma_backend.dto.ErrorResponse;
 import com.alma.alma_backend.dto.RegisterRequest;
 import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
+import com.alma.alma_backend.logging.AuditLogService;
 import com.alma.alma_backend.repository.OrganizacionRepository;
 import com.alma.alma_backend.security.JwtUtil;
 import com.alma.alma_backend.service.UsuarioService;
@@ -41,6 +42,7 @@ public class AuthenticationController {
     private final OrganizacionRepository organizacionRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
     @Autowired
     public AuthenticationController(AuthenticationManager authenticationManager,
@@ -48,24 +50,28 @@ public class AuthenticationController {
                                     UsuarioService usuarioService,
                                     OrganizacionRepository organizacionRepository,
                                     JwtUtil jwtUtil,
-                                    PasswordEncoder passwordEncoder) {
+                                    PasswordEncoder passwordEncoder,
+                                    AuditLogService auditLogService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.usuarioService = usuarioService;
         this.organizacionRepository = organizacionRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
 
     @PostMapping("/register-organization")
     @Transactional
-    public ResponseEntity<?> registerOrganization(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<ApiResponse<?>> registerOrganization(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
             if (organizacionRepository.findByCif(registerRequest.getCif()).isPresent()) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El CIF de la organización ya está registrado"));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), "El CIF de la organización ya está registrado"));
             }
             if (usuarioService.existsByEmail(registerRequest.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("El email del administrador ya está en uso"));
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error(HttpStatus.CONFLICT.value(), "El email del administrador ya está en uso"));
             }
 
             Organizacion newOrganizacion = new Organizacion();
@@ -84,26 +90,29 @@ public class AuthenticationController {
 
             Usuario savedUser = usuarioService.save(newUser);
 
-            logger.info("Organización '{}' y administrador '{}' registrados exitosamente", savedOrganizacion.getNombreOficial(), savedUser.getEmail());
+            auditLogService.logAuthWarn("Organización '{}' y administrador '{}' registrados", savedOrganizacion.getNombreOficial(), savedUser.getEmail());
 
             final UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
             final String jwt = jwtUtil.generateToken(userDetails);
 
+            AuthenticationResponse response = new AuthenticationResponse(jwt, savedUser.getEmail(), savedUser.getTipoUsuario().name(), savedUser.getPasswordTemporal());
             return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new AuthenticationResponse(jwt, savedUser.getEmail(), savedUser.getTipoUsuario().name(), savedUser.getPasswordTemporal()));
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Organization registered", response));
 
         } catch (DataIntegrityViolationException e) {
             logger.error("Error de integridad al registrar organización: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("Conflicto de datos. El CIF o el email ya existen."));
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT.value(), "Conflicto de datos. El CIF o el email ya existen."));
         } catch (Exception e) {
             logger.error("Error inesperado al registrar organización: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error interno al registrar la organización"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error interno al registrar la organización"));
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<ApiResponse<?>> createAuthenticationToken(@Valid @RequestBody AuthenticationRequest authenticationRequest) {
         try {
             String email = authenticationRequest.getEmail().toLowerCase().trim();
             authenticationManager.authenticate(
@@ -116,21 +125,27 @@ public class AuthenticationController {
             Usuario usuario = usuarioService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado después de una autenticación exitosa. Error de consistencia de datos."));
 
-            logger.info("Usuario autenticado exitosamente: {}", email);
+            auditLogService.logAuthWarn("Usuario autenticado: {}", email);
 
-            return ResponseEntity.ok(
-                new AuthenticationResponse(jwt, usuario.getEmail(), usuario.getTipoUsuario().name(), usuario.getPasswordTemporal())
-            );
+            AuthenticationResponse response = new AuthenticationResponse(jwt, usuario.getEmail(), usuario.getTipoUsuario().name(), usuario.getPasswordTemporal());
+            return ResponseEntity.ok(ApiResponse.success(response));
 
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("Email o contraseña incorrectos"));
+            auditLogService.logSecurityWarn("Intento de inicio de sesión con credenciales inválidas para {}", authenticationRequest.getEmail());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), "Email o contraseña incorrectos"));
         } catch (DisabledException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("La cuenta está deshabilitada"));
+            auditLogService.logSecurityWarn("Intento de inicio de sesión en cuenta deshabilitada: {}", authenticationRequest.getEmail());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(HttpStatus.FORBIDDEN.value(), "La cuenta está deshabilitada"));
         } catch (LockedException e) {
-            return ResponseEntity.status(HttpStatus.LOCKED).body(new ErrorResponse("La cuenta está bloqueada"));
+            auditLogService.logSecurityWarn("Intento de inicio de sesión en cuenta bloqueada: {}", authenticationRequest.getEmail());
+            return ResponseEntity.status(HttpStatus.LOCKED)
+                .body(ApiResponse.error(HttpStatus.LOCKED.value(), "La cuenta está bloqueada"));
         } catch (Exception e) {
             logger.error("Error durante la autenticación: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Error durante la autenticación"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Error durante la autenticación"));
         }
     }
 }

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -56,18 +55,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(
                             "/api/auth/**",
-                            "/api/authentication/**",
-                            "/api/public/**",
-                            "/swagger-ui.html",
                             "/swagger-ui/**",
-                            "/swagger-resources/**",
-                            "/v3/api-docs/**",
-                            "/v3/api-docs.yaml",
-                            "/webjars/**"
+                            "/v3/api-docs/**"
                     ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/progreso-duelo/fases").permitAll() // Permitir acceso público a las fases del duelo
-                .requestMatchers("/actuator/health").permitAll()
-                .anyRequest().authenticated()
+                    .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
