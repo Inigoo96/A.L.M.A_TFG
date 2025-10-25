@@ -48,7 +48,6 @@ public class InformeEmocional {
     private GeneradoPor generadoPor = GeneradoPor.AUTOMATICO;
 
     @Column(name = "FECHA_GENERACION", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaGeneracion;
 
     @PrePersist

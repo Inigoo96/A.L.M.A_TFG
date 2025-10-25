@@ -33,14 +33,12 @@ public class MensajeChatPacientes {
     private String mensaje;
 
     @Column(name = "FECHA_ENVIO", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaEnvio;
 
     @Column(name = "LEIDO")
     private Boolean leido = false;
 
     @Column(name = "FECHA_LECTURA")
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaLectura;
 
     @PrePersist

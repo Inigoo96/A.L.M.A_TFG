@@ -33,14 +33,12 @@ public class MensajeForo {
     private String mensaje;
 
     @Column(name = "FECHA_PUBLICACION", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaPublicacion;
 
     @Column(name = "EDITADO")
     private Boolean editado = false;
 
     @Column(name = "FECHA_EDICION")
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaEdicion;
 
     @Column(name = "MODERADO")

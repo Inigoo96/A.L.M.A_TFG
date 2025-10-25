@@ -30,11 +30,9 @@ public class ChatPacientes {
     private Paciente paciente2;
 
     @Column(name = "FECHA_CREACION", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime fechaCreacion;
 
     @Column(name = "ULTIMA_ACTIVIDAD")
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime ultimaActividad;
 
     @Enumerated(EnumType.STRING)
