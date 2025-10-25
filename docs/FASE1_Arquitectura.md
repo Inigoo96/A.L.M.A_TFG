@@ -40,6 +40,8 @@ graph TD
 | `repository` | Repositorios Spring Data JPA para todas las entidades persistentes. | `UsuarioRepository`, `ProfesionalRepository`, `ProgresoDueloRepository`, `MensajeChatRepository`, `InformeEmocionalRepository`, etc.
 | `entity` | Modelo de dominio con anotaciones JPA, enums para catálogos y estados. | `Usuario`, `Paciente`, `Profesional`, `Cita`, `MetaDiaria`, `ProgresoDuelo`, `MensajeChat`, `Organizacion`, `AuditoriaAdmin`.
 | `dto` | Objetos de transferencia usados por los controladores para requests/responses. Incluye DTOs específicos para registros, autenticación, reporting y métricas. |
+| `mapper` | Conversión entre entidades y DTOs reutilizable en servicios/controladores. | `UsuarioMapper`, `AuthMapper`, `RecursoMapper`.
+| `logging` | Configuraciones y helpers para trazabilidad y formateo de logs de negocio. | `LoggingConfig`, `AuditLogger`.
 | `config` | Configuración de Spring Security y personalización de Jackson. | `SecurityConfig`, `JacksonConfig`.
 | `security` | Infraestructura JWT: filtro, entry point, utilidades y `UserDetailsService` personalizado. | `JwtRequestFilter`, `JwtAuthenticationEntryPoint`, `JwtUtil`, `UserDetailsServiceImpl`.
 | `exceptions` | Manejo global de errores y excepciones personalizadas. | `GlobalExceptionHandler`, `ResourceNotFoundException`.
@@ -58,24 +60,22 @@ graph TD
 ## 5. Configuración de seguridad
 - **`SecurityConfig`** habilita seguridad web y métodos, desactiva CSRF para APIs y registra CORS manual con orígenes permitidos `http://localhost:3000` / `4200` (React / Angular). Añade protección XSS y CSP básica.
 - **Autenticación JWT**: filtro `JwtRequestFilter` intercepta solicitudes, valida tokens con `JwtUtil` y delega en `UserDetailsServiceImpl`. `JwtAuthenticationEntryPoint` gestiona errores 401.
-- **Endpoints públicos**: `/api/auth/**`, `/api/authentication/**`, `/api/public/**`, `/swagger-ui/**`, `/v3/api-docs/**`, `/api/progreso-duelo/fases` (GET), `/actuator/health`.
+- **Endpoints públicos**: `/api/auth/**`, `/swagger-ui/**`, `/v3/api-docs/**`, `/error` (Spring default) y `actuator/health` cuando está habilitado.
 - **PasswordEncoder**: `BCryptPasswordEncoder` con fuerza 12.
 
 ## 6. Configuración de base de datos y entorno
 - **`application.properties`**: configuración común (nombre app, puerto 8080, dialecto PostgreSQL, `ddl-auto=validate`, logging DEBUG para `com.alma`).
-- **Perfiles locales**: `application-inigoDev.properties` y `application-lauraDev.properties` con credenciales de PostgreSQL local (usuario `postgres`, contraseñas distintas).
-- **Producción**: `application-prod.properties` externaliza URL y credenciales via variables (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`), reduce logs y mantiene `ddl-auto=validate`.
-- **Seguridad**: `application-security.properties` contiene clave JWT y expiración (también existe versión `.example`).
+- **Perfiles locales**: `application-inigoDev.properties` y `application-lauraDev.properties` cargan credenciales mediante variables (`DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`), evitando secretos hardcodeados.
+- **Producción**: `application-prod.properties` y `application-security.properties` consumen secretos desde entorno (prefijos `SPRING_`/`JWT_`), reducen logs y mantienen `ddl-auto=validate`. Se incluyen archivos `.example` para documentar variables requeridas.
+- **Seguridad**: las claves JWT y expiraciones se referencian por `ENV` (`JWT_SECRET_KEY`, `JWT_EXPIRATION_MINUTES`) y no se exponen en repositorio.
 - **Migraciones**: recursos en `src/main/resources/db` y scripts adicionales en `/bd` (nombrados `V#__...sql`, compatibles con Flyway).
 
 ## 7. Puntos de mejora y riesgos técnicos
-1. **Clave JWT y credenciales comprometidas**: `application-security.properties` y perfiles locales contienen secretos reales versionados. Deben moverse a variables de entorno y excluirse del repositorio.
-2. **Configuración Maven no portátil**: `maven-compiler-plugin` referencia una ruta absoluta de Windows para `javac`, lo que rompe builds en Linux/Mac y entornos CI. Reemplazar por configuración estándar.
-3. **CORS rígido**: orígenes fijos limitan despliegue móvil/web en producción. Conviene parametrizar según entorno.
-4. **Logging sensible**: `logging.level.org.springframework.security=DEBUG` puede exponer detalles de seguridad en producción si no se controla por perfil.
-5. **Multiplicidad de scripts SQL**: coexistencia de migraciones en `src/main/resources/db` y `/bd` requiere alineación (definir fuente única o pipeline Flyway).
-6. **Ausencia de infraestructura centralizada para variables**: falta `.env` o guía de variables para backend y frontend; recomendable documentar y usar `application-*.yml` con `@ConfigurationProperties`.
-7. **Controladores muy numerosos**: se intuye un dominio amplio; será clave validar en Fase 2 que la lógica compleja está delegada a servicios y que existen pruebas que protejan la arquitectura.
+1. **CORS rígido**: orígenes fijos limitan despliegue móvil/web en producción. Conviene parametrizar según entorno.
+2. **Logging sensible**: `logging.level.org.springframework.security=DEBUG` puede exponer detalles de seguridad en producción si no se controla por perfil.
+3. **Multiplicidad de scripts SQL**: coexistencia de migraciones en `src/main/resources/db` y `/bd` requiere alineación (definir fuente única o pipeline Flyway).
+4. **Ausencia de infraestructura centralizada para variables**: falta `.env` o guía de variables para backend y frontend; recomendable documentar y usar `application-*.yml` con `@ConfigurationProperties`.
+5. **Controladores muy numerosos**: se intuye un dominio amplio; será clave validar en Fase 2 que la lógica compleja está delegada a servicios y que existen pruebas que protejan la arquitectura.
 
 ---
 **Estado:** Fase 1 completada. Listo para avanzar a la Fase 2 (calidad y refactorización).
