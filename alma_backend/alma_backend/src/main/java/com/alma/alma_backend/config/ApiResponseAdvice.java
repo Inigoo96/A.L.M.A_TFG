@@ -10,7 +10,11 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import java.util.Set;
@@ -27,6 +31,9 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+        if (isSwaggerRequest()) {
+            return false;
+        }
         return true;
     }
 
@@ -61,16 +68,37 @@ public class ApiResponseAdvice implements ResponseBodyAdvice<Object> {
         return ApiResponse.success(status, "OK", body);
     }
 
+    private boolean isSwaggerRequest() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes instanceof ServletRequestAttributes servletAttributes) {
+            return isSwaggerPath(servletAttributes.getRequest());
+        }
+        return false;
+    }
+
     private boolean isSwaggerRequest(ServerHttpRequest request) {
         String path = request.getURI().getPath();
         if (request instanceof ServletServerHttpRequest servletRequest) {
-            path = servletRequest.getServletRequest().getRequestURI();
+            HttpServletRequest servletHttpRequest = servletRequest.getServletRequest();
+            if (servletHttpRequest != null) {
+                return isSwaggerPath(servletHttpRequest);
+            }
         }
 
+        return path != null && isSwaggerPath(path);
+    }
+
+    private boolean isSwaggerPath(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        return isSwaggerPath(request.getRequestURI());
+    }
+
+    private boolean isSwaggerPath(String path) {
         if (path == null) {
             return false;
         }
-
         return SWAGGER_PATH_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
