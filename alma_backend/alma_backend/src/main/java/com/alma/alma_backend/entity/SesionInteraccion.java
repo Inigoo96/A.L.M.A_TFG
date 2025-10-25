@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -65,10 +66,12 @@ public class SesionInteraccion {
     private String estadoEmocionalDetectado;
 
     @Column(name = "TEMAS_CONVERSADOS", columnDefinition = "TEXT[]")
-    private String[] temasConversados;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> temasConversados;
 
     @Column(name = "ALERTAS_GENERADAS", columnDefinition = "TEXT[]")
-    private String[] alertasGeneradas;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> alertasGeneradas;
 
     // Relación con mensajes de IA
     @OneToMany(mappedBy = "sesion", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

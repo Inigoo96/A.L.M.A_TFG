@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -139,8 +138,8 @@ public class IAServiceImpl implements IAService {
         // TODO: Analizar conversación completa con IA para extraer temas y alertas
         // List<String> temas = iaClientService.extraerTemas(obtenerMensajesSesion(sesion.getId()));
         // List<String> alertas = iaClientService.detectarAlertas(obtenerMensajesSesion(sesion.getId()));
-        // sesion.setTemasConversados(temas.toArray(new String[0]));
-        // sesion.setAlertasGeneradas(alertas.toArray(new String[0]));
+        // sesion.setTemasConversados(temas);
+        // sesion.setAlertasGeneradas(alertas);
 
         SesionInteraccion sesionGuardada = sesionRepository.save(sesion);
         return convertirSesionADTO(sesionGuardada);
@@ -170,7 +169,7 @@ public class IAServiceImpl implements IAService {
         List<SesionInteraccion> sesiones = sesionRepository.findSesionesConAlertasPorProfesional(idProfesional);
         // Filtrar sesiones que realmente tienen alertas (array no vacío)
         return sesiones.stream()
-                .filter(s -> s.getAlertasGeneradas() != null && s.getAlertasGeneradas().length > 0)
+                .filter(s -> s.getAlertasGeneradas() != null && !s.getAlertasGeneradas().isEmpty())
                 .map(this::convertirSesionADTO)
                 .collect(Collectors.toList());
     }
@@ -211,12 +210,12 @@ public class IAServiceImpl implements IAService {
         dto.setNotasProfesional(sesion.getNotasProfesional());
         dto.setEstadoEmocionalDetectado(sesion.getEstadoEmocionalDetectado());
 
-        if (sesion.getTemasConversados() != null) {
-            dto.setTemasConversados(Arrays.asList(sesion.getTemasConversados()));
+        if (sesion.getTemasConversados() != null && !sesion.getTemasConversados().isEmpty()) {
+            dto.setTemasConversados(new ArrayList<>(sesion.getTemasConversados()));
         }
 
-        if (sesion.getAlertasGeneradas() != null) {
-            dto.setAlertasGeneradas(Arrays.asList(sesion.getAlertasGeneradas()));
+        if (sesion.getAlertasGeneradas() != null && !sesion.getAlertasGeneradas().isEmpty()) {
+            dto.setAlertasGeneradas(new ArrayList<>(sesion.getAlertasGeneradas()));
         }
 
         return dto;
