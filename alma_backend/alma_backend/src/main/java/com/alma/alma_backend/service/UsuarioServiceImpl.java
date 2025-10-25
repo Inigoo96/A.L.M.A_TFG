@@ -1,10 +1,11 @@
 package com.alma.alma_backend.service;
 
+import com.alma.alma_backend.dto.UsuarioUpdateRequestDTO;
+import com.alma.alma_backend.mapper.UsuarioMapper;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.exceptions.ResourceNotFoundException;
 import com.alma.alma_backend.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,19 +15,23 @@ import java.util.Optional;
  * Implementación de la lógica de negocio para los Usuarios.
  */
 @Service
-public class UsuarioServiceImpl implements UsuarioService {
+public class UsuarioServiceImpl extends BaseService<Usuario, Integer> implements UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository) {
+        super(usuarioRepository);
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @Override
     public Usuario save(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+        return super.save(usuario);
     }
 
     @Override
     public Optional<Usuario> findById(Integer id) {
-        return usuarioRepository.findById(id);
+        return super.findById(id);
     }
 
     @Override
@@ -41,7 +46,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public List<Usuario> findAll() {
-        return usuarioRepository.findAll();
+        return super.findAll();
     }
 
     @Override
@@ -57,42 +62,15 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public void deleteById(Integer id) {
-        usuarioRepository.deleteById(id);
+        super.deleteById(id);
     }
 
     @Override
-    public Usuario updateUser(Integer id, Usuario usuarioDetails) {
+    public Usuario updateUser(Integer id, UsuarioUpdateRequestDTO usuarioDetails) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        // Actualizar solo los campos que se proporcionan y no son nulos
-        if (usuarioDetails.getNombre() != null && !usuarioDetails.getNombre().isEmpty()) {
-            usuario.setNombre(usuarioDetails.getNombre());
-        }
-        if (usuarioDetails.getApellidos() != null) {
-            usuario.setApellidos(usuarioDetails.getApellidos());
-        }
-        if (usuarioDetails.getEmail() != null && !usuarioDetails.getEmail().isEmpty()) {
-            usuario.setEmail(usuarioDetails.getEmail());
-        }
-        if (usuarioDetails.getTelefono() != null) {
-            usuario.setTelefono(usuarioDetails.getTelefono());
-        }
-        if (usuarioDetails.getDni() != null && !usuarioDetails.getDni().isEmpty()) {
-            usuario.setDni(usuarioDetails.getDni());
-        }
-        if (usuarioDetails.getCargo() != null) {
-            usuario.setCargo(usuarioDetails.getCargo());
-        }
-        if (usuarioDetails.getDocumentoCargoUrl() != null) {
-            usuario.setDocumentoCargoUrl(usuarioDetails.getDocumentoCargoUrl());
-        }
-        if (usuarioDetails.getUltimoAcceso() != null) {
-            usuario.setUltimoAcceso(usuarioDetails.getUltimoAcceso());
-        }
-        if (usuarioDetails.getActivo() != null) {
-            usuario.setActivo(usuarioDetails.getActivo());
-        }
+        UsuarioMapper.updateEntity(usuario, usuarioDetails);
 
         return usuarioRepository.save(usuario);
     }

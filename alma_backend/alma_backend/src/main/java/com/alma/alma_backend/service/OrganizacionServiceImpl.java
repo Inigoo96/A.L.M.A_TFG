@@ -2,6 +2,8 @@ package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.CambioEstadoOrganizacionDTO;
 import com.alma.alma_backend.dto.OrganizacionEstadisticasDTO;
+import com.alma.alma_backend.dto.OrganizacionRequestDTO;
+import com.alma.alma_backend.mapper.OrganizacionMapper;
 import com.alma.alma_backend.entity.EstadoOrganizacion;
 import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.TipoAccionAuditoria;
@@ -9,7 +11,6 @@ import com.alma.alma_backend.entity.Usuario;
 import com.alma.alma_backend.repository.OrganizacionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,24 +20,29 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class OrganizacionServiceImpl implements OrganizacionService {
+public class OrganizacionServiceImpl extends BaseService<Organizacion, Integer> implements OrganizacionService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrganizacionServiceImpl.class);
 
-    @Autowired
-    private OrganizacionRepository organizacionRepository;
+    private final OrganizacionRepository organizacionRepository;
 
-    @Autowired
-    private AuditoriaAdminService auditoriaAdminService;
+    private final AuditoriaAdminService auditoriaAdminService;
+
+    public OrganizacionServiceImpl(OrganizacionRepository organizacionRepository,
+                                   AuditoriaAdminService auditoriaAdminService) {
+        super(organizacionRepository);
+        this.organizacionRepository = organizacionRepository;
+        this.auditoriaAdminService = auditoriaAdminService;
+    }
 
     @Override
     public Organizacion save(Organizacion organizacion) {
-        return organizacionRepository.save(organizacion);
+        return super.save(organizacion);
     }
 
     @Override
     public Optional<Organizacion> findById(Integer id) {
-        return organizacionRepository.findById(id);
+        return super.findById(id);
     }
 
     @Override
@@ -46,26 +52,20 @@ public class OrganizacionServiceImpl implements OrganizacionService {
 
     @Override
     public List<Organizacion> findAll() {
-        return organizacionRepository.findAll();
+        return super.findAll();
     }
 
     @Override
     public void deleteById(Integer id) {
-        organizacionRepository.deleteById(id);
+        super.deleteById(id);
     }
 
     @Override
-    public Organizacion updateOrganizacion(Integer id, Organizacion organizacionDetails) {
+    public Organizacion updateOrganizacion(Integer id, OrganizacionRequestDTO organizacionDetails) {
         Organizacion organizacion = organizacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Organizacion no encontrada con id: " + id));
 
-        organizacion.setNombreOficial(organizacionDetails.getNombreOficial());
-        organizacion.setCif(organizacionDetails.getCif());
-        organizacion.setEmailCorporativo(organizacionDetails.getEmailCorporativo());
-        organizacion.setTelefonoContacto(organizacionDetails.getTelefonoContacto());
-        organizacion.setDireccion(organizacionDetails.getDireccion());
-        organizacion.setCodigoRegcess(organizacionDetails.getCodigoRegcess());
-        organizacion.setNumeroSeguridadSocial(organizacionDetails.getNumeroSeguridadSocial());
+        OrganizacionMapper.updateEntity(organizacion, organizacionDetails);
 
         return organizacionRepository.save(organizacion);
     }

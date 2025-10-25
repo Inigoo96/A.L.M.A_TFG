@@ -1,6 +1,5 @@
 package com.alma.alma_backend.dto;
 
-import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.TipoUsuario;
 import lombok.Data;
 
@@ -15,7 +14,7 @@ public class UsuarioResponseDTO {
     private String apellidos;
     private String telefono;
     private TipoUsuario tipoUsuario;
-    private Organizacion organizacion; // Idealmente, esto también sería un DTO. Lo veremos después.
+    private OrganizacionSummaryDTO organizacion;
     private boolean activo;
     private LocalDateTime fechaRegistro;
     private LocalDateTime ultimoAcceso;

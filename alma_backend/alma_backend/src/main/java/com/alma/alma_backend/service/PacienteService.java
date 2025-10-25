@@ -1,6 +1,7 @@
 package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.PacienteDetalleDTO;
+import com.alma.alma_backend.dto.PacienteUpdateRequestDTO;
 import com.alma.alma_backend.entity.Paciente;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public interface PacienteService {
 
     void deleteById(Integer id);
 
-    Paciente updatePaciente(Integer id, Paciente pacienteDetails);
+    Paciente updatePaciente(Integer id, PacienteUpdateRequestDTO pacienteDetails);
 
     // Métodos con DTOs optimizados
     Optional<PacienteDetalleDTO> findDetalleById(Integer idPaciente);

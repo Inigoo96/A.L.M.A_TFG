@@ -2,6 +2,7 @@ package com.alma.alma_backend.service;
 
 import com.alma.alma_backend.dto.CambioEstadoOrganizacionDTO;
 import com.alma.alma_backend.dto.OrganizacionEstadisticasDTO;
+import com.alma.alma_backend.dto.OrganizacionRequestDTO;
 import com.alma.alma_backend.entity.EstadoOrganizacion;
 import com.alma.alma_backend.entity.Organizacion;
 import com.alma.alma_backend.entity.Usuario;
@@ -21,7 +22,7 @@ public interface OrganizacionService {
 
     void deleteById(Integer id);
 
-    Organizacion updateOrganizacion(Integer id, Organizacion organizacionDetails);
+    Organizacion updateOrganizacion(Integer id, OrganizacionRequestDTO organizacionDetails);
 
     /**
      * Obtiene las estadísticas de usuarios para todas las organizaciones.

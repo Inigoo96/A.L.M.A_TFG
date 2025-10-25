@@ -1,5 +1,6 @@
 package com.alma.alma_backend.service;
 
+import com.alma.alma_backend.dto.UsuarioUpdateRequestDTO;
 import com.alma.alma_backend.entity.TipoUsuario;
 import com.alma.alma_backend.entity.Usuario;
 
@@ -33,5 +34,5 @@ public interface UsuarioService {
 
     void deleteById(Integer id);
 
-    Usuario updateUser(Integer id, Usuario usuarioDetails);
+    Usuario updateUser(Integer id, UsuarioUpdateRequestDTO usuarioDetails);
 }
