@@ -1,6 +1,6 @@
 package com.alma.alma_backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,6 +34,6 @@ public class Profesional {
     private String centroSalud;
 
     @OneToMany(mappedBy = "profesional", fetch = FetchType.LAZY)
-    @JsonIgnore
+    @JsonManagedReference("profesional-asignacion")
     private List<AsignacionProfesionalPaciente> asignaciones;
 }

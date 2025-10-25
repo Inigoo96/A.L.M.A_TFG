@@ -1,5 +1,6 @@
 package com.alma.alma_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,10 +23,12 @@ public class AsignacionProfesionalPaciente {
 
     @ManyToOne
     @JoinColumn(name = "ID_PROFESIONAL", nullable = false)
+    @JsonBackReference("profesional-asignacion")
     private Profesional profesional;
 
     @ManyToOne
     @JoinColumn(name = "ID_PACIENTE", nullable = false)
+    @JsonBackReference("paciente-asignacion")
     private Paciente paciente;
 
     @Column(name = "ES_PRINCIPAL")
