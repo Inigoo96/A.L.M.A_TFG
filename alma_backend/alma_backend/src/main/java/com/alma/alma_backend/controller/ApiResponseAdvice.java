@@ -1,4 +1,4 @@
-package com.alma.alma_backend.config;
+package com.alma.alma_backend.controller;
 
 import com.alma.alma_backend.dto.ApiResponse;
 import com.alma.alma_backend.dto.ErrorResponse;
