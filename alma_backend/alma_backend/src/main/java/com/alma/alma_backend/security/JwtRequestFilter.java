@@ -24,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -140,14 +141,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
-        // No filtrar solo endpoints de autenticación públicos y recursos públicos
-        return path.startsWith("/api/auth/") ||
-               path.startsWith("/swagger-ui") ||
+        String[] publicPaths = {
+            "/api/auth/login",
+            "/api/auth/register/organization"
+        };
+
+        // No filtrar endpoints de autenticación públicos
+        if (Arrays.stream(publicPaths).anyMatch(path::equals)) {
+            return true;
+        }
+
+        // No filtrar recursos de Swagger/OpenAPI
+        return path.startsWith("/swagger-ui") ||
                path.startsWith("/v3/api-docs") ||
                path.startsWith("/swagger-resources") ||
                path.startsWith("/webjars") ||
                path.equals("/error");
     }
+
 
     private void writeUnauthorizedResponse(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
         if (response.isCommitted()) {
